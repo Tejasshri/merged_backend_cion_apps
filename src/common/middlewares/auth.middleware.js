@@ -32,6 +32,11 @@ const userAuthentication = (req, res, next) => {
           connection.query(
             `SELECT * FROM users WHERE username = "${payload.username}"`,
             async (err, result) => {
+              if (err) {
+                return res
+                  .status(400)
+                  .send({ msg: "Not connected" + err.message });
+              }
               const isUserAuthenticated = result[0];
 
               if (isUserAuthenticated) {

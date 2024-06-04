@@ -31,15 +31,14 @@ let connectMongoDB = async (routerName = "") => {
 };
 
 let connectSqlDB = async (routerName = "") => {
+  const connection = mysql.createConnection({
+    host: "bavbwnskgspsg4hoezuh-mysql.services.clever-cloud.com",
+    database: "bavbwnskgspsg4hoezuh",
+    user: "uvwarr5nxly8rt9h",
+    password: "ePWGgtAiz9G7TIylKiPD",
+    port: 3306,
+  });
   try {
-    const connection = mysql.createConnection({
-      host: "bavbwnskgspsg4hoezuh-mysql.services.clever-cloud.com",
-      database: "bavbwnskgspsg4hoezuh",
-      user: "uvwarr5nxly8rt9h",
-      password: "ePWGgtAiz9G7TIylKiPD",
-      port: 3306,
-    });
-
     connection.connect((err) => {
       try {
         if (err) {
@@ -53,7 +52,11 @@ let connectSqlDB = async (routerName = "") => {
     });
     console.log("Sql DB connected " + routerName);
     return connection;
-  } catch (error) {}
+  } catch (error) {
+    console.log("Error in connection sql DB" + error.message);
+  } finally {
+    // connection.end();
+  }
 };
 
 module.exports = { connectMongoDB, connectSqlDB };

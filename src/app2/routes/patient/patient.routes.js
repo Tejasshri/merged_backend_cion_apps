@@ -65,6 +65,8 @@ patientRouter.get("/get-leads", userAuthentication, async (req, res) => {
     // // To convert the date into YYYY-MM-DD format converting the recieved data
   } catch (err) {
     res.status(500).send("Error executing query");
+  } finally {
+    connection.end();
   }
 });
 
@@ -88,6 +90,8 @@ patientRouter.get("/patiens/:id", userAuthentication, async (req, res) => {
     );
   } catch (err) {
     res.status(400).send(err);
+  } finally {
+    connection.end();
   }
 });
 
@@ -140,6 +144,8 @@ patientRouter.post("/add-lead", userAuthentication, async (req, res) => {
     );
   } catch (err) {
     res.status(500).send({ message: err.message });
+  } finally {
+    connection.end();
   }
 });
 
@@ -188,6 +194,8 @@ patientRouter.put("/update-lead", userAuthentication, async (req, res) => {
     }
   } catch (err) {
     res.status(500).send("Failed to update lead");
+  } finally {
+    connection.end();
   }
 });
 
@@ -272,6 +280,8 @@ patientRouter.put(
     } catch (err) {
       console.log(errr);
       res.status(500).send("Failed to update lead");
+    } finally {
+      connection.end();
     }
   }
 );
@@ -393,12 +403,14 @@ patientRouter.post("/add-followup", userAuthentication, async (req, res) => {
     );
   } catch (err) {
     res.status(500).send({ message: "Failed To add followups" });
+  } finally {
+    connection.end();
   }
 });
 
 patientRouter.put("/update-followup-dates", async (req, res) => {
+  const { connection } = req;
   try {
-    const { connection } = req;
     const { field, id, value, followupId, leadStage, changeDate } = req.body;
     // To get all Lead Id followups
 
@@ -480,6 +492,8 @@ patientRouter.put("/update-followup-dates", async (req, res) => {
     return res
       .status(500)
       .send({ message: "Failed to update following dates" });
+  } finally {
+    connection.end();
   }
 });
 
