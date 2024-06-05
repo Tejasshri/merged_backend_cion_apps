@@ -66,7 +66,7 @@ patientRouter.get("/get-leads", userAuthentication, async (req, res) => {
   } catch (err) {
     res.status(500).send("Error executing query");
   } finally {
-    connection.end();
+    connection.destroy();
   }
 });
 
@@ -91,7 +91,7 @@ patientRouter.get("/patiens/:id", userAuthentication, async (req, res) => {
   } catch (err) {
     res.status(400).send(err);
   } finally {
-    connection.end();
+    connection.destroy();
   }
 });
 
@@ -145,7 +145,7 @@ patientRouter.post("/add-lead", userAuthentication, async (req, res) => {
   } catch (err) {
     res.status(500).send({ message: err.message });
   } finally {
-    connection.end();
+    connection.destroy();
   }
 });
 
@@ -195,7 +195,7 @@ patientRouter.put("/update-lead", userAuthentication, async (req, res) => {
   } catch (err) {
     res.status(500).send("Failed to update lead");
   } finally {
-    connection.end();
+    connection.destroy();
   }
 });
 
@@ -281,7 +281,7 @@ patientRouter.put(
       console.log(errr);
       res.status(500).send("Failed to update lead");
     } finally {
-      connection.end();
+      connection.destroy();
     }
   }
 );
@@ -404,7 +404,7 @@ patientRouter.post("/add-followup", userAuthentication, async (req, res) => {
   } catch (err) {
     res.status(500).send({ message: "Failed To add followups" });
   } finally {
-    connection.end();
+    connection.destroy();
   }
 });
 
@@ -493,7 +493,7 @@ patientRouter.put("/update-followup-dates", async (req, res) => {
       .status(500)
       .send({ message: "Failed to update following dates" });
   } finally {
-    connection.end();
+    connection.destroy();
   }
 });
 

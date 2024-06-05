@@ -30,33 +30,28 @@ let connectMongoDB = async (routerName = "") => {
   }
 };
 
-let connectSqlDB = async (routerName = "") => {
-  const connection = mysql.createConnection({
-    host: "bavbwnskgspsg4hoezuh-mysql.services.clever-cloud.com",
-    database: "bavbwnskgspsg4hoezuh",
-    user: "uvwarr5nxly8rt9h",
-    password: "ePWGgtAiz9G7TIylKiPD",
-    port: 3306,
-  });
-  try {
-    connection.connect((err) => {
-      try {
-        if (err) {
-          console.error("Error connecting to database: " + err.stack);
-          return;
-        }
-        console.log("Connected to database as id " + connection.threadId);
-      } catch (err) {
-        console.log(err);
-      }
-    });
-    console.log("Sql DB connected " + routerName);
-    return connection;
-  } catch (error) {
-    console.log("Error in connection sql DB" + error.message);
-  } finally {
-    // connection.end();
+const connection = mysql.createConnection({
+  host: "bavbwnskgspsg4hoezuh-mysql.services.clever-cloud.com",
+  database: "bavbwnskgspsg4hoezuh",
+  user: "uvwarr5nxly8rt9h",
+  password: "ePWGgtAiz9G7TIylKiPD",
+  port: 3306,
+});
+connection.connect((err) => {
+  if (err) {
+    console.error("Error connecting to database: " + err.stack);
+    return;
   }
+  console.log("Connected to database as id " + connection.threadId);
+});
+
+let connectSqlDBAnd = async (routerName = "", query = "") => {
+  connection.query(
+    `SELECT * FROM users WHERE username = '${username}'`,
+    async (err, result) => {
+      
+    }
+  );
 };
 
 module.exports = { connectMongoDB, connectSqlDB };

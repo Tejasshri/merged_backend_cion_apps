@@ -33,12 +33,11 @@ coachRouter.use((req, res, next) => {
       // });
 
       req.connection = connection;
-      
 
       next();
     } catch (error) {
       console.log(error.message, "err cchchhchc");
-    } 
+    }
   };
   startDb();
 });
@@ -97,10 +96,13 @@ coachRouter.post("/register", async (req, res) => {
             VALUES('${coach.email}','${coach.password}','${coach.username}')`,
             (err, result) => {
               console.log(err, result);
+              if (!err)
+                return res
+                  .status(201)
+                  .json({ msg: "Coach Created", status: 201 });
             }
           );
-          connection.end();
-          res.status(201).json({ msg: "Coach Created", status: 201 });
+          connection.destroy();
         }
       }
     );
@@ -108,13 +110,14 @@ coachRouter.post("/register", async (req, res) => {
     console.log(error);
     res.status(400).json({ msg: "Something Went Wrong", status: 400 });
   } finally {
-    connection.end();
+    connection.destroy();
   }
 });
 
 // Endpoint to login a coach
 coachRouter.post("/login", async (req, res) => {
   const { connection } = req;
+  console.log("Login start");
   try {
     const { password, username } = req.body;
 
@@ -130,8 +133,11 @@ coachRouter.post("/login", async (req, res) => {
     connection.query(
       `SELECT * FROM users WHERE username = '${username}'`,
       async (err, result) => {
-        if (err) return res.status(500);
-        else {
+        console.log(result)
+        if (err) {
+          console.log(err);
+          return res.status(500);
+        } else {
           const isUserExists = result[0];
           console.log(isUserExists, "kkk");
           if (isUserExists) {
@@ -157,7 +163,6 @@ coachRouter.post("/login", async (req, res) => {
     console.log(error);
     res.send({ msg: error.message });
   } finally {
-    connection.end();
   }
 });
 
