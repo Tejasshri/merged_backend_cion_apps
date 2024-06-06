@@ -2,17 +2,8 @@ const { verify } = require("jsonwebtoken");
 const { compare } = require("bcryptjs");
 const { connectSqlDB } = require("../utils/connectDB.js");
 
-let connection;
-const startDb = async () => {
-  try {
-    connection = await connectSqlDB("sdsdd");
-  } catch (error) {
-    console.log(error.message);
-  }
-};
-startDb();
-
-const userAuthentication = (req, res, next) => {
+const userAuthentication = async (req, res, next) => {
+  const {sqlDB} = req; 
   try {
     const authorization = req.headers.authorization;
     let token;
@@ -29,7 +20,7 @@ const userAuthentication = (req, res, next) => {
           console.log(err);
           res.status(401).send({ msg: "Invalid Token" });
         } else {
-          connection.query(
+          sqlDB.query(
             `SELECT * FROM users WHERE username = "${payload.username}"`,
             async (err, result) => {
               if (err) {

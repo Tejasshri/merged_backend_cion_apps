@@ -6,7 +6,7 @@ const app = express();
 const server = createServer(app);
 
 // Importing Router
-const { coachRouter } = require("./src/app1/routes/coach/coach.routes.js");
+const { coachRouter } = require("./src/common/routes/coach/coach.routes.js");
 const {
   webhookPatientRouter,
 } = require("./src/app1/routes/patient/webhook.routes.js");
@@ -24,7 +24,10 @@ app.use(cors());
 app.use(express.json());
 
 // SQL DB
-const { connectSqlDB } = require("./src/common/utils/connectDB.js");
+const {
+  connectSqlDB,
+  connectMongoDB,
+} = require("./src/common/utils/connectDB.js");
 
 function formatDate(date) {
   const year = date.getFullYear();
@@ -33,10 +36,46 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-let connection;
-connectSqlDB()
-  .then((r) => (connection = r))
-  .catch((err) => console.log(err));
+connectMongoDB();
+connectSqlDB();
+
+app.use(async (req, res, next) => {
+  let [sqlDB, mongoDB] = [];
+  if (!sqlDB) {
+    sqlDB = await connectSqlDB("Sql Again Started");
+  }
+  if (!mongoDB) {
+    mongoDB = await connectMongoDB("MongoDb Again Conncted");
+  }
+
+  req.mongoDB = mongoDB;
+  req.sqlDB = sqlDB;
+  next();
+});
+
+// (async function () {
+//   try {
+//     let sqlDB = await connectSqlDB("Sql Started");
+//     let mongoDB = await connectMongoDB("MongoDB Started");
+//     app.use(async (req, res, next) => {
+//       if (!sqlDB) {
+//         sqlDB = await connectSqlDB("Sql Again Started");
+//       }
+//       if (!mongoDB) {
+//         mongoDB = await connectMongoDB("MongoDb Again Conncted");
+//       }
+
+//       console.log("Middleware SQL DB:", typeof sqlDB);
+//       console.log("Middleware MongoDB:", typeof mongoDB);
+
+//       req.mongoDB = mongoDB;
+//       req.sqlDB = sqlDB;
+//       next();
+//     });
+//   } catch (error) {
+//     console.log(`Error in database starting ${error.message}`);
+//   }
+// })();
 
 const io = initSocketServer(server);
 app.use((req, res, next) => {

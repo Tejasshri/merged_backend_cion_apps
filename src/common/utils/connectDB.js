@@ -3,55 +3,52 @@ const fs = require("fs").promises; // Use promise-based file system operations
 const path = require("path");
 const mysql = require("mysql");
 
+let [mongoDB, pool] = [];
+
 let connectMongoDB = async (routerName = "") => {
   try {
-    const uploadsFolderPath = path.join(__dirname, "uploads");
-
-    // Check if the uploads folder exists and create it if it doesn't
-    try {
-      await fs.access(uploadsFolderPath);
-    } catch (error) {
-      await fs.mkdir(uploadsFolderPath);
-      console.log("Uploads folder created successfully.");
+    if (mongoDB) {
+      console.log("Retured this");
+      return mongoDB;
     }
     const client = new MongoClient(
       "mongodb+srv://cionchat:Cionchat%401234@cluster0.xliikxl.mongodb.net/"
     );
 
     await client.connect(); // Properly connect the client
-    const db = client.db("test");
-    // Remember to close the client when done
-    // await client.close();
+    const db = await client.db("test");
     console.log("DATABASE connected " + routerName);
-    return db;
+    mongoDB = db;
+    return mongoDB;
   } catch (error) {
     console.error(error);
     res.status(500).send("Error connecting to the database");
   }
 };
 
-const connection = mysql.createConnection({
-  host: "bavbwnskgspsg4hoezuh-mysql.services.clever-cloud.com",
-  database: "bavbwnskgspsg4hoezuh",
-  user: "uvwarr5nxly8rt9h",
-  password: "ePWGgtAiz9G7TIylKiPD",
-  port: 3306,
-});
-connection.connect((err) => {
-  if (err) {
-    console.error("Error connecting to database: " + err.stack);
-    return;
-  }
-  console.log("Connected to database as id " + connection.threadId);
-});
 
-let connectSqlDBAnd = async (routerName = "", query = "") => {
-  connection.query(
-    `SELECT * FROM users WHERE username = '${username}'`,
-    async (err, result) => {
-      
+const connectSqlDB = async (message) => {
+  if (pool) return pool;
+
+  pool = mysql.createPool({
+    connectionLimit: 10, // Adjust the limit as needed
+    host: process.env.SQL_HOST,
+    database: process.env.SQL_DATABASE,
+    user: process.env.SQL_USER,
+    password: process.env.SQL_PASSWORD,
+    port: process.env.SQL_PORT,
+  });
+
+  pool.getConnection((err, connection) => {
+    if (err) {
+      console.error("Error connecting to SQL database: " + err.stack);
+      return;
     }
-  );
+    if (connection) connection.release(); // Release the connection back to the pool
+    console.log("SQL Database Connected: " + message);
+  });
+
+  return pool;
 };
 
 module.exports = { connectMongoDB, connectSqlDB };
