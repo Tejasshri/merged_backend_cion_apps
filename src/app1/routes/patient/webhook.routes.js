@@ -6,15 +6,7 @@ const {
   uploadToWhatsApp,
 } = require("../../../common/utils/uploadToWhatsApp.js");
 
-let db;
-const startDb = async () => {
-  try {
-    db = await connectMongoDB();
-  } catch (error) {
-    console.log(error.message);
-  }
-};
-startDb();
+
 
 const webhookPatientRouter = Router();
 

@@ -2,18 +2,6 @@ const { Router, static } = require("express");
 const path = require("path");
 const { connectMongoDB } = require("../../../common/utils/connectDB.js");
 
-let mongoDB;
-
-// Function to connect to MongoDB
-const startDb = async () => {
-  try {
-    mongoDB = await connectMongoDB("Build Page Router");
-  } catch (error) {
-    console.error("Error connecting to MongoDB:", error.message);
-  }
-};
-
-startDb();
 
 const pagesRouter = Router();
 
