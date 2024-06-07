@@ -16,7 +16,7 @@ const {
 const {
   patientRouter: crmPatientRouter,
 } = require("./src/app2/routes/patient/patient.routes.js");
-const { pagesRouter } = require("./src/app1/routes/pages/pages.routes.js");
+const { pagesRouter } = require("./src/common/routes/pages/pages.routes.js");
 const { initSocketServer } = require("./src/common/utils/socketIo.js");
 
 // Enabling Cors
@@ -28,6 +28,9 @@ const {
   connectSqlDB,
   connectMongoDB,
 } = require("./src/common/utils/connectDB.js");
+const {
+  messageRouter,
+} = require("./src/app1/routes/message/message.routes.js");
 
 function formatDate(date) {
   const year = date.getFullYear();
@@ -87,9 +90,10 @@ app.use("/", pagesRouter);
 app.use("/app1/coach", bindDb, coachRouter); // Mount coachRouter under /app1
 app.use(bindDb, webhookPatientRouter); // Mount patientRouter //
 app.use("/app1/patient", bindDb, patientRouter);
+app.use("/", messageRouter);
 
 // Defining Router App2
-app.use("/app2/patient",bindDb, crmPatientRouter);
+app.use("/app2/patient", bindDb, crmPatientRouter);
 
 module.exports = server;
 // --- Written By Tejas --- //

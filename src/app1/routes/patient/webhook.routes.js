@@ -5,9 +5,6 @@ const { addTimestamps } = require("../../../common/utils/helper.js");
 const {
   uploadToWhatsApp,
 } = require("../../../common/utils/uploadToWhatsApp.js");
-
-
-
 const webhookPatientRouter = Router();
 
 webhookPatientRouter.post("/webhook", async function (req, res) {
@@ -226,8 +223,21 @@ webhookPatientRouter.post("/webhook", async function (req, res) {
   }
 });
 
+const VERIFY_TOKEN = "your_verify_token"; // Replace "your_verify_token" with your actual verification token
+
 webhookPatientRouter.get("/webhook", function (req, res) {
-  res.sendStatus(200);
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  if (token === VERIFY_TOKEN) {
+    res.status(200).send(challenge); // Respond with the challenge value
+  } else {
+    res.sendStatus(403);
+  }
 });
+
+// webhookPatientRouter.get("/webhook", function (req, res) {
+//   res.sendStatus(200);
+// });
 
 module.exports.webhookPatientRouter = webhookPatientRouter;
