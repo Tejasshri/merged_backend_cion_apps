@@ -39,22 +39,20 @@ function formatDate(date) {
 connectMongoDB();
 connectSqlDB();
 
-app.use(async (req, res, next) => {
-  let [sqlDB, mongoDB] = [];
-  if (!sqlDB) {
-    sqlDB = await connectSqlDB("Sql Again Started");
-  }
-  if (!mongoDB) {
-    mongoDB = await connectMongoDB("MongoDb Again Conncted");
-  }
+const bindDb = async (req, res, next) => {
+  let sqlDB = await connectSqlDB("Sql Again Started");
+  let mongoDB = await connectMongoDB("MongoDb Again Conncted");
+
+  if (!sqlDB || !mongoDB)
+    return res.status(500).json({ msg: "Internal Server Error" });
 
   req.mongoDB = mongoDB;
   req.sqlDB = sqlDB;
   next();
-});
+};
 
 // (async function () {
-//   try {
+//   try
 //     let sqlDB = await connectSqlDB("Sql Started");
 //     let mongoDB = await connectMongoDB("MongoDB Started");
 //     app.use(async (req, res, next) => {
@@ -86,12 +84,12 @@ app.use((req, res, next) => {
 
 // Defining Router App1
 app.use("/", pagesRouter);
-app.use("/app1/coach", coachRouter); // Mount coachRouter under /app1
-app.use(webhookPatientRouter); // Mount patientRouter //
-app.use("/app1/patient", patientRouter);
+app.use("/app1/coach", bindDb, coachRouter); // Mount coachRouter under /app1
+app.use(bindDb, webhookPatientRouter); // Mount patientRouter //
+app.use("/app1/patient", bindDb, patientRouter);
 
 // Defining Router App2
-app.use("/app2/patient", crmPatientRouter);
+app.use("/app2/patient",bindDb, crmPatientRouter);
 
 module.exports = server;
 // --- Written By Tejas --- //
