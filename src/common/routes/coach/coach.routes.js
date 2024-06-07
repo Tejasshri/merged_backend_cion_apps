@@ -1,6 +1,6 @@
 // --- Written By Tejas --- //
 
-const { Router, request } = require("express");
+const { Router } = require("express");
 const bcrypt = require("bcryptjs");
 const { sign, verify } = require("jsonwebtoken");
 const userAuthentication = require("../../middlewares/auth.middleware.js");

@@ -573,7 +573,7 @@ patientRouter.get(
     ORDER BY allleads.id DESC
     ;`,
         (err, result) => {
-          if (err) throw err;
+          if (err) throw new Error(err);
           else {
             // To change the date format Into YYYY-MM-DD
             const convertedArray = result.map((each) => ({
