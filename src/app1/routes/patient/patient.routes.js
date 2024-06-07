@@ -82,4 +82,33 @@ patientRouter.post("/update-user-note", async (req, res) => {
   }
 });
 
+patientRouter.post("/update-patient", async (req, res) => {
+  try {
+    const {mongoDB} = req ;
+    const { from, name, coach, stage, center, area } = req.body;
+    const collection = await mongoDB.collection("patients");
+    console.log(from, name, coach, stage, center, area);
+    await collection.updateOne(
+      {
+        patient_phone_number: from,
+      },
+      {
+        $set: {
+          name,
+          stage,
+          center,
+          area,
+          coach,
+        },
+      }
+    );
+    console.log("updated");
+    res.status(200).json({ msg: "Updated Successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error " + error.message });
+  }
+});
+
+
 module.exports.patientRouter = patientRouter;
