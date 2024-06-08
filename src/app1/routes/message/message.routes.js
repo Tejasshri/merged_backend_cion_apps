@@ -18,6 +18,7 @@ messageRouter.post(
   userAuthentication,
   async function (request, response) {
     try {
+      const {mongoDB} = req ;
       const { type, data, to } = await request.body;
       console.log(type);
       let patientsCollection = await mongoDB.collection("patients");
