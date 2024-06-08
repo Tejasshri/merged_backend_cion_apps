@@ -11,6 +11,7 @@ const { executeQuery } = require("../../../common/utils/connectDB.js");
 webhookPatientRouter.post("/webhook", async function (req, res) {
   let patient_mobile_number;
   const { mongoDB: db } = req;
+  console.log("webhook hits");
   try {
     let patientsCollection = await db.collection("patients");
     let messagesCollection = await db.collection("messages");
@@ -136,7 +137,7 @@ webhookPatientRouter.post("/webhook", async function (req, res) {
           reactions: [],
         })
       );
-      console.log(createdMessageId)
+      console.log(createdMessageId);
       res.io.emit("update user message", {
         messageId: createdMessageId.insertedId,
         userNumber: value.messages[0].from,
