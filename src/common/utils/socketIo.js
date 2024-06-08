@@ -6,6 +6,10 @@ function initSocketServer(server) {
   const io = new Server(server, {
     cors: {
       origin: [
+        "http://localhost:3005",
+        "http://localhost:3004",
+        "http://localhost:3003",
+        "http://localhost:3002",
         "http://localhost:3001",
         "http://localhost:3000",
         "https://todoassignmentfrontend.onrender.com",

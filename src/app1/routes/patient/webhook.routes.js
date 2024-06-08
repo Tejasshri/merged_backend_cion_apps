@@ -221,8 +221,7 @@ webhookPatientRouter.post("/webhook", async function (req, res) {
   } catch (error) {
     console.log(error.message);
     res.status(400).json({ msg: "Something Went Wrong", error: error.message });
-  } finally {
-  }
+  } 
 });
 
 const VERIFY_TOKEN = "token1122"; // Replace "your_verify_token" with your actual verification token
