@@ -6,6 +6,7 @@ const {
   uploadToWhatsApp,
 } = require("../../../common/utils/uploadToWhatsApp.js");
 const webhookPatientRouter = Router();
+const { executeQuery } = require("../../../common/utils/connectDB.js");
 
 webhookPatientRouter.post("/webhook", async function (req, res) {
   let patient_mobile_number;
@@ -17,7 +18,6 @@ webhookPatientRouter.post("/webhook", async function (req, res) {
     const { changes, id } = entry[0];
     const { value } = changes[0];
     patient_mobile_number = value.messages[0].from;
-    console.log(value);
 
     if (value.statuses !== undefined) {
       return res.status(200).json({ msg: "Not need status" });
@@ -26,8 +26,6 @@ webhookPatientRouter.post("/webhook", async function (req, res) {
     let patient = await patientsCollection.findOne({
       patient_phone_number: value.messages[0].from,
     });
-
-    console.log(patient);
 
     if (!patient) {
       let createdPatient = await patientsCollection.insertOne(
@@ -130,6 +128,7 @@ webhookPatientRouter.post("/webhook", async function (req, res) {
         value.messages[0].type
       )
     ) {
+      console.log("Arrived");
       let createdMessageId = await messagesCollection.insertOne(
         addTimestamps({
           ...value.messages[0],
@@ -137,6 +136,7 @@ webhookPatientRouter.post("/webhook", async function (req, res) {
           reactions: [],
         })
       );
+      console.log(createdMessageId)
       res.io.emit("update user message", {
         messageId: createdMessageId.insertedId,
         userNumber: value.messages[0].from,
@@ -150,7 +150,7 @@ webhookPatientRouter.post("/webhook", async function (req, res) {
         )
       ) {
         // console.log(value.messages[0]);
-        let mediaData = await MediaFunction(
+        let mediaData = await uploadToWhatsApp(
           value.messages[0][`${value.messages[0].type}`].id
         );
 

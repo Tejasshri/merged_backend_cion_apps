@@ -28,7 +28,6 @@ const connectMongoDB = async (routerName = "") => {
   }
 };
 
-
 const createPool = () => {
   pool = mysql.createPool({
     connectionLimit: 10, // Adjust the limit as needed
@@ -56,9 +55,11 @@ const connectSqlDB = async (message) => {
         console.log("Connection successful");
         connection.release(); // Release the connection back to the pool
       } catch (err) {
-        if (err.code === 'ER_USER_LIMIT_REACHED' && retries > 0) {
-          console.error(`User limit reached, retrying connection in 5 seconds... (${retries} retries left)`);
-          await new Promise(resolve => setTimeout(resolve, 5000));
+        if (err.code === "ER_USER_LIMIT_REACHED" && retries > 0) {
+          console.error(
+            `User limit reached, retrying connection in 5 seconds... (${retries} retries left)`
+          );
+          await new Promise((resolve) => setTimeout(resolve, 5000));
           return attemptConnection(retries - 1);
         } else {
           console.error("Error connecting to SQL database:", err.message);
@@ -72,10 +73,27 @@ const connectSqlDB = async (message) => {
 
     return pool;
   } catch (error) {
-    console.error("Failed to connect to SQL database after multiple attempts:", error.message);
+    console.error(
+      "Failed to connect to SQL database after multiple attempts:",
+      error.message
+    );
     throw error; // re-throw the error after logging it
   }
 };
 
+const executeQuery = async (query, values) => {
+  try {
+    if (!pool) {
+      throw new Error(
+        "MySQL pool has not been created. Ensure pool is initialized."
+      );
+    }
+    const results = await pool.query(query, values);
+    return results;
+  } catch (error) {
+    console.error("Error executing query:", error.message);
+    throw error;
+  }
+};
 
-module.exports = { connectMongoDB, connectSqlDB };
+module.exports = { connectMongoDB, connectSqlDB, executeQuery };
