@@ -12,6 +12,7 @@ function initSocketServer(server) {
         "http://192.168.29.41:3000",
         "https://cion-chat-app-frontend-11-1rwobmyui-tejas-projects-a32dbdf2.vercel.app",
         "https://cion-chat-app-frontend-11.vercel.app",
+        "https://merged-backend-cion-apps.onrender.com",
       ],
     },
   });
