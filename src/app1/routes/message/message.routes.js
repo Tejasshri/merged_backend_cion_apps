@@ -18,7 +18,7 @@ messageRouter.post(
   userAuthentication,
   async function (request, response) {
     try {
-      const {mongoDB} = request ;
+      const { mongoDB } = request;
       const { type, data, to } = await request.body;
       console.log(type);
       let patientsCollection = await mongoDB.collection("patients");
@@ -158,6 +158,7 @@ messageRouter.use(
   express.static("public")
 );
 
+let baseUrl = "https://merged-backend-cion-apps.onrender.com";
 messageRouter.post(
   "/recieve-media",
   userAuthentication,
@@ -201,7 +202,7 @@ messageRouter.post(
 
 messageRouter.post("/messageData", async (req, res) => {
   try {
-    const {mongoDB} = req ;
+    const { mongoDB } = req;
     const { message_id, user_id, is_last = true, messageLimit } = req.body;
 
     let data;
