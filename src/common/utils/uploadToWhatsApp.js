@@ -1,3 +1,5 @@
+const axios = require("axios");
+
 const uploadToWhatsApp = async (media_id) => {
   const ourResponse = await fetch(
     `https://graph.facebook.com/v19.0/${media_id}`,

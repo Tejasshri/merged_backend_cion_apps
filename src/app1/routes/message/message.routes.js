@@ -3,6 +3,7 @@ const fs = require("fs");
 const axios = require("axios");
 const FormData = require("form-data");
 const express = require("express");
+const {compressImageBuffer} = require("../../../common/utils/filesFunctions.js")
 const userAuthentication = require("../../../common/middlewares/auth.middleware.js");
 const { addTimestamps } = require("../../../common/utils/helper.js");
 const {
@@ -19,6 +20,7 @@ messageRouter.post(
   "/message",
   userAuthentication,
   async function (request, response) {
+    console.log("step 1");
     try {
       const { mongoDB } = request;
       const { type, data, to } = await request.body;
@@ -38,6 +40,7 @@ messageRouter.post(
           body: JSON.stringify(formattedObject),
         }
       );
+      console.log("step 2");
       let responseData = await ourResponse.json();
       let lastId = null;
       if (ourResponse.ok) {
@@ -161,6 +164,7 @@ messageRouter.use(
 );
 
 let baseUrl = "https://merged-backend-cion-apps.onrender.com";
+baseUrl = "http://localhost:3005"
 messageRouter.post(
   "/recieve-media",
   userAuthentication,
@@ -187,6 +191,7 @@ messageRouter.post(
     })
       .then((response) => {
         if (response.status === 401) {
+          console.log(response);
           throw new Error(response?.error || "Data couldn't upload");
         }
         return response.json();
@@ -197,7 +202,7 @@ messageRouter.post(
       })
       .catch((error) => {
         console.log(error.message, "Error");
-        res.send({ msg: error.message });
+        res.status(400).send({ msg: error.message });
       });
   }
 );
