@@ -9,6 +9,7 @@ const webhookPatientRouter = Router();
 
 webhookPatientRouter.post("/webhook", async function (req, res) {
   let patient_mobile_number;
+  const { mongoDB: db } = req;
   try {
     let patientsCollection = await db.collection("patients");
     let messagesCollection = await db.collection("messages");
