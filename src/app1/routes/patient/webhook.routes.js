@@ -223,7 +223,7 @@ webhookPatientRouter.post("/webhook", async function (req, res) {
   }
 });
 
-const VERIFY_TOKEN = "your_verify_token"; // Replace "your_verify_token" with your actual verification token
+const VERIFY_TOKEN = "token1122"; // Replace "your_verify_token" with your actual verification token
 
 webhookPatientRouter.get("/webhook", function (req, res) {
   const token = req.query["hub.verify_token"];
