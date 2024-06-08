@@ -84,7 +84,7 @@ patientRouter.post("/update-user-note", async (req, res) => {
 
 patientRouter.post("/update-patient", async (req, res) => {
   try {
-    const {mongoDB} = req ;
+    const { mongoDB } = req;
     const { from, name, coach, stage, center, area } = req.body;
     const collection = await mongoDB.collection("patients");
     console.log(from, name, coach, stage, center, area);
@@ -109,6 +109,5 @@ patientRouter.post("/update-patient", async (req, res) => {
     res.status(500).json({ message: "Internal server error " + error.message });
   }
 });
-
 
 module.exports.patientRouter = patientRouter;

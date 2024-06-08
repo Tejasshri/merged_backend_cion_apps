@@ -39,8 +39,8 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-connectMongoDB();
-connectSqlDB();
+connectMongoDB("Mongo Db");
+connectSqlDB("Sql DB");
 
 const bindDb = async (req, res, next) => {
   let sqlDB = await connectSqlDB("Sql Again Started");
@@ -53,30 +53,6 @@ const bindDb = async (req, res, next) => {
   req.sqlDB = sqlDB;
   next();
 };
-
-// (async function () {
-//   try
-//     let sqlDB = await connectSqlDB("Sql Started");
-//     let mongoDB = await connectMongoDB("MongoDB Started");
-//     app.use(async (req, res, next) => {
-//       if (!sqlDB) {
-//         sqlDB = await connectSqlDB("Sql Again Started");
-//       }
-//       if (!mongoDB) {
-//         mongoDB = await connectMongoDB("MongoDb Again Conncted");
-//       }
-
-//       console.log("Middleware SQL DB:", typeof sqlDB);
-//       console.log("Middleware MongoDB:", typeof mongoDB);
-
-//       req.mongoDB = mongoDB;
-//       req.sqlDB = sqlDB;
-//       next();
-//     });
-//   } catch (error) {
-//     console.log(`Error in database starting ${error.message}`);
-//   }
-// })();
 
 const io = initSocketServer(server);
 app.use((req, res, next) => {
