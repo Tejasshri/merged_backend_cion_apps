@@ -36,7 +36,7 @@ const createPool = () => {
     user: process.env.SQL_USER,
     password: process.env.SQL_PASSWORD,
     port: process.env.SQL_PORT,
-    connectTimeout: 5000, // Connect timeout in milliseconds
+    connectTimeout: 1000, // Connect timeout in milliseconds
   });
 
   // Promisify for Node.js async/await.
