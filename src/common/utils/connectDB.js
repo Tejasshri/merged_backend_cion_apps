@@ -37,6 +37,8 @@ const createPool = () => {
     password: process.env.SQL_PASSWORD,
     port: process.env.SQL_PORT,
     connectTimeout: 1000, // Connect timeout in milliseconds
+    waitForConnections: true, // Whether the pool should queue connections or return an error when the limit is reached
+    queueLimit: 0, // Maximum number of queued connection requests (0 for unlimited)
   });
 
   // Promisify for Node.js async/await.
