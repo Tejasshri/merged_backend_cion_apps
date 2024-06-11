@@ -2,6 +2,7 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 
 let users = {};
+
 function initSocketServer(server) {
   const io = new Server(server, {
     cors: {
@@ -19,14 +20,20 @@ function initSocketServer(server) {
         "https://merged-backend-cion-apps.onrender.com",
       ],
     },
+    pingInterval: 30000, // Increase ping interval to 30 seconds
+    pingTimeout: 60000,  // Timeout after 60 seconds
+    perMessageDeflate: { // Enable compression
+      threshold: 1024, // Only compress messages larger than 1KB
+    },
   });
 
   io.on("connection", (socket) => {
-    console.log("socket working start");
-    socket.join("", (name) => {});
+    console.log("Socket connection established");
+
     socket.on("join", (name) => {
       users[socket.id] = name;
-      console.log("joined");
+      console.log(`${name} joined`);
+      socket.emit("join_ack", { success: true });
     });
 
     socket.on("update message", (offlineMessage) => {
@@ -35,7 +42,12 @@ function initSocketServer(server) {
 
     socket.on("join room", (name, room) => {
       socket.join(room);
-      socket.broadcast.emit("joined", name, room);
+      socket.to(room).emit("joined", name, room); // Emit only to the room
+    });
+
+    socket.on("disconnect", () => {
+      delete users[socket.id];
+      console.log("User disconnected");
     });
   });
 
