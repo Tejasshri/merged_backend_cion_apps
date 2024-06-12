@@ -64,6 +64,7 @@ const connectSqlDBAndExecute = async (query) => {
   } catch (error) {
     console.error("SQL Database Connection Error: ", error.message);
     console.error("Trying to connect again ............ ");
+    pool = undefined;
     return await connectSqlDBAndExecute(query);
   }
 };
