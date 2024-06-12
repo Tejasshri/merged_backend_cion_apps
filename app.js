@@ -68,7 +68,8 @@ app.use((req, res, next) => {
 
 // Defining Router App1
 app.use("/", pagesRouter);
-app.use("/app1/coach", bindDb, coachRouter); // Mount coachRouter under /app1
+// app.use("/app1/coach", bindDb, coachRouter); // Mount coachRouter under /app1
+app.use("/common/user", bindDb, coachRouter); // Mount coachRouter under /app1
 app.use(bindDb, webhookPatientRouter); // Mount patientRouter //
 app.use("/app1/patient", bindDb, patientRouter);
 app.use("/", messageRouter);
