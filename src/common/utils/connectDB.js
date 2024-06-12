@@ -5,6 +5,7 @@ const util = require("util");
 let mongoDB;
 let mongoClient; // Store the MongoClient instance
 let pool;
+let connection;
 
 const connectMongoDB = async (routerName = "") => {
   try {
@@ -46,7 +47,7 @@ const createPool = async () => {
 const connectSqlDBAndExecute = async (query) => {
   try {
     if (!pool) await createPool();
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
     console.log("Connection successful");
 
     // Promisify the query method for this connection
@@ -57,7 +58,6 @@ const connectSqlDBAndExecute = async (query) => {
     console.log("Query results:", results);
 
     // Release the connection back to the pool
-    connection.release();
     console.log("SQL Database Connected: Operation completed successfully");
 
     return results;
@@ -66,6 +66,8 @@ const connectSqlDBAndExecute = async (query) => {
     console.error("Trying to connect again ............ ");
     pool = undefined;
     return await connectSqlDBAndExecute(query);
+  } finally {
+    if (connection) connection.release();
   }
 };
 

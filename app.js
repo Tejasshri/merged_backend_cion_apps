@@ -4,6 +4,9 @@ const cors = require("cors");
 const { createServer } = require("http");
 const app = express();
 const server = createServer(app);
+const path = require("path");
+const { upload } = require("./src/common/utils/filesFunctions.js");
+const { convertIntoJson } = require("./src/common/utils/excelToJson.js");
 
 // Importing Router
 const { coachRouter } = require("./src/common/routes/coach/coach.routes.js");
@@ -81,6 +84,95 @@ app.use("/app2/patient", bindDb, crmPatientRouter);
 //   req.sqlDB.release();
 //   next()
 // });
+
+app.use("/page", express.static(path.join(__dirname, "page")));
+app.get("/page", (req, res) => {
+  res.sendFile(path.join(__dirname, "page", "index.html"));
+});
+
+app.use("/page", express.static("uploads"));
+app.post("/page", upload.single("file"), async (req, res) => {
+  try {
+    console.log("File uploaded");
+    console.log(req?.file?.path);
+
+    res.send({ msg: "Okay" });
+  } catch (error) {
+    res.status(400).json({ msg: "Okay" });
+  }
+});
+
+let token =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhd2FuIiwicGFzc3dvcmQiOiIxMjM0NSIsImVtYWlsIjoicGF3YW5AZ21haWwuY29tIiwiaWF0IjoxNzE4MTA1NDk1fQ.BZ1XYpFxplx1zQGXfqnFUbSPzFRcUQI5ZXvtN8T10BA";
+async function addData(data) {
+  console.log(data);
+  try {
+    const url =
+      "https://merged-backend-cion-apps.onrender.com/app2/patient/add-lead";
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    };
+    const response = await fetch(url, options);
+    const resdata = await response.json();
+    if (response.ok) {
+      console.log("Lead Added From Excel");
+      res.send({ msg: "Success" });
+    } else {
+      console.log(response);
+      console.log("Something went wrong in adding lead");
+      res.status(400).json({ msg: "Something went wrong" });
+    }
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+}
+
+app.post("/add-data", upload.single("file"), async (req, res) => {
+  try {
+    const result = await convertIntoJson(req?.file?.path);
+    let leads = result["Sheet1"];
+    let row1 = leads[0];
+    let keys = Object.values(row1);
+    leads = leads?.slice(1)?.map((each) => {
+      return {
+        phoneNumber: each["B"],
+        [keys[2]]: each["C"],
+        callerName: each["D"],
+        patientName: each["E"],
+        dateOfContact: each["F"],
+        leadChannel: each["G"],
+        campaign: each["H"],
+        leadSource: each["I"],
+        coachName: each["J"],
+        age: each["K"],
+        gender: each["L"],
+        typeOfCancer: each["M"],
+        location: each["N"],
+        email: each["O"],
+        relationsToPatient: each["P"],
+        coachNotes: each["Q"],
+        inboundOutbound: each["R"],
+        relevant: each["S"],
+        interested: each["T"],
+        conv: each["U"],
+        preOP: each["V"],
+      };
+    });
+
+    await addData(leads[0]);
+    console.log("Lead Added");
+    res.send({ msg: "Okay", result: leads[0] });
+  } catch (err) {
+    console.log(err.message, "add lead err");
+    res.status(400).send({ msg: err.message, status: 400 });
+  }
+});
 
 module.exports = server;
 // --- Written By Tejas --- //
