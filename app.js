@@ -25,12 +25,15 @@ app.use(express.json());
 
 // SQL DB
 const {
-  connectSqlDB,
+  connectSqlDBAndExecute,
   connectMongoDB,
+  createPool,
 } = require("./src/common/utils/connectDB.js");
 const {
   messageRouter,
 } = require("./src/app1/routes/message/message.routes.js");
+
+createPool();
 
 function formatDate(date) {
   const year = date.getFullYear();
@@ -39,19 +42,21 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-connectMongoDB("Mongo Db");
-connectSqlDB("Sql DB");
+connectMongoDB("Mongo Db").catch((err) => {
+  console.log(err.message);
+});
 
 const bindDb = async (req, res, next) => {
-  let sqlDB = await connectSqlDB("Sql Again Started");
-  let mongoDB = await connectMongoDB("MongoDb Again Conncted");
+  try {
+    let mongoDB = await connectMongoDB("MongoDb Again Connected");
+    if (!mongoDB) return res.status(500).json({ msg: "Internal Server Error" });
 
-  if (!sqlDB || !mongoDB)
-    return res.status(500).json({ msg: "Internal Server Error" });
-
-  req.mongoDB = mongoDB;
-  req.sqlDB = sqlDB;
-  next();
+    req.mongoDB = mongoDB;
+    req.connectSqlDBAndExecute = connectSqlDBAndExecute;
+    next();
+  } catch (error) {
+    res.status(500).send({ msg: "Something went wrong", status: 500 });
+  }
 };
 
 const io = initSocketServer(server);
@@ -70,6 +75,11 @@ app.use("/", messageRouter);
 
 // Defining Router App2
 app.use("/app2/patient", bindDb, crmPatientRouter);
+
+// app.use((req, res, next) => {
+//   req.sqlDB.release();
+//   next()
+// });
 
 module.exports = server;
 // --- Written By Tejas --- //

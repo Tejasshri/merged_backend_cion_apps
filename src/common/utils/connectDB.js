@@ -28,7 +28,7 @@ const connectMongoDB = async (routerName = "") => {
   }
 };
 
-const createPool = () => {
+const createPool = async () => {
   pool = mysql.createPool({
     connectionLimit: 10, // Adjust the limit as needed
     host: process.env.SQL_HOST,
@@ -36,66 +36,36 @@ const createPool = () => {
     user: process.env.SQL_USER,
     password: process.env.SQL_PASSWORD,
     port: process.env.SQL_PORT,
-    connectTimeout: 1000, // Connect timeout in milliseconds
-    waitForConnections: true, // Whether the pool should queue connections or return an error when the limit is reached
-    queueLimit: 0, // Maximum number of queued connection requests (0 for unlimited)
+    connectTimeout: 10000, // Increased connect timeout in milliseconds
   });
 
   // Promisify for Node.js async/await.
   pool.getConnection = util.promisify(pool.getConnection);
 };
 
-const connectSqlDB = async (message) => {
+const connectSqlDBAndExecute = async (query) => {
   try {
-    if (!pool) {
-      createPool();
-    }
+    if (!pool) await createPool();
+    const connection = await pool.getConnection();
+    console.log("Connection successful");
 
-    const attemptConnection = async (retries = 5) => {
-      try {
-        const connection = await pool.getConnection();
-        console.log("Connection successful");
-        connection.release(); // Release the connection back to the pool
-      } catch (err) {
-        if (err.code === "ER_USER_LIMIT_REACHED" && retries > 0) {
-          console.error(
-            `User limit reached, retrying connection in 5 seconds... (${retries} retries left)`
-          );
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          return attemptConnection(retries - 1);
-        } else {
-          console.error("Error connecting to SQL database:", err.message);
-          throw err; // re-throw the error after logging it
-        }
-      }
-    };
+    // Promisify the query method for this connection
+    connection.query = util.promisify(connection.query);
 
-    await attemptConnection();
-    console.log("SQL Database Connected: " + message);
+    // Perform database operation here
+    const results = await connection.query(query);
+    console.log("Query results:", results);
 
-    return pool;
-  } catch (error) {
-    console.error(
-      "Failed to connect to SQL database after multiple attempts:",
-      error.message
-    );
-    throw error; // re-throw the error after logging it
-  }
-};
+    // Release the connection back to the pool
+    connection.release();
+    console.log("SQL Database Connected: Operation completed successfully");
 
-const executeQuery = async (query, values) => {
-  try {
-    if (!pool) {
-      throw new Error(
-        "MySQL pool has not been created. Ensure pool is initialized."
-      );
-    }
-    const results = await pool.query(query, values);
     return results;
   } catch (error) {
-    console.error("Error executing query:", error.message);
-    throw error;
+    console.error("SQL Database Connection Error: ", error.message);
+    console.error("Trying to connect again ............ ");
+    return await connectSqlDBAndExecute(query);
   }
 };
 
-module.exports = { connectMongoDB, connectSqlDB, executeQuery };
+module.exports = { connectMongoDB, connectSqlDBAndExecute, createPool };
