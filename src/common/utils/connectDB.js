@@ -58,16 +58,14 @@ const connectSqlDBAndExecute = async (query) => {
     console.log("Query results:", results);
 
     // Release the connection back to the pool
+    await connection.release();
     console.log("SQL Database Connected: Operation completed successfully");
 
     return results;
   } catch (error) {
     console.error("SQL Database Connection Error: ", error.message);
     console.error("Trying to connect again ............ ");
-    pool = undefined;
     return await connectSqlDBAndExecute(query);
-  } finally {
-    if (connection) connection.release();
   }
 };
 
