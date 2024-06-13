@@ -30,7 +30,7 @@ const connectMongoDB = async (routerName = "") => {
 };
 
 const createPool = async () => {
-  const pool = mysql.createPool({
+  pool = mysql.createPool({
     connectionLimit: 5,
     host: process.env.SQL_HOST,
     database: process.env.SQL_DATABASE,
