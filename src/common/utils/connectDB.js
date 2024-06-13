@@ -58,6 +58,7 @@ const connectSqlDBAndExecute = async (query) => {
     console.log("Query results:", results);
 
     // Release the connection back to the pool
+    await connection.release();
     console.log("SQL Database Connected: Operation completed successfully");
 
     return results;
@@ -65,9 +66,7 @@ const connectSqlDBAndExecute = async (query) => {
     console.error("SQL Database Connection Error: ", error.message);
     console.error("Trying to connect again ............ ");
     return await connectSqlDBAndExecute(query);
-  } finally {
-    await connection.release();
-  }
+  } 
 };
 
 module.exports = { connectMongoDB, connectSqlDBAndExecute, createPool };
