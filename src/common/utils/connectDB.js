@@ -30,14 +30,16 @@ const connectMongoDB = async (routerName = "") => {
 };
 
 const createPool = async () => {
-  pool = mysql.createPool({
+  const pool = mysql.createPool({
+    connectionLimit: 5,
     host: process.env.SQL_HOST,
     database: process.env.SQL_DATABASE,
     user: process.env.SQL_USER,
     password: process.env.SQL_PASSWORD,
     port: process.env.SQL_PORT,
     connectTimeout: 10000, // Increased connect timeout in milliseconds
-    queueLimit: 1000,
+    queueLimit: 1000, // Limit of queued connection requests
+    waitForConnections: true, // Enable queueing of connection requests
   });
 
   // Promisify for Node.js async/await.
@@ -64,6 +66,7 @@ const connectSqlDBAndExecute = async (query) => {
     return results;
   } catch (error) {
     console.error("SQL Database Connection Error: ", error.message);
+    pool = undefined;
     console.error("Trying to connect again ............ ");
     return await connectSqlDBAndExecute(query);
   }
