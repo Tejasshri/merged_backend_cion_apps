@@ -50,7 +50,7 @@ const connectSqlDBAndExecute = async (query) => {
   try {
     if (!pool) await createPool();
     connection = await pool.getConnection();
-    console.log("Connection successful");
+    console.log("Connection successful " + connection.threadId);
 
     // Promisify the query method for this connection
     connection.query = util.promisify(connection.query);
@@ -61,12 +61,19 @@ const connectSqlDBAndExecute = async (query) => {
 
     // Release the connection back to the pool
     await connection.release();
+    console.log("Released connection" + connection.threadId);
     console.log("SQL Database Connected: Operation completed successfully");
 
     return results;
   } catch (error) {
     console.error("SQL Database Connection Error: ", error.message);
-    pool = undefined;
+    await pool.end((err) => {
+      if (err) {
+        pool = undefined;
+      } else {
+        console.log("Pool released successfully");
+      }
+    });
     console.error("Trying to connect again ............ ");
     return await connectSqlDBAndExecute(query);
   }
