@@ -135,39 +135,38 @@ async function addData(data) {
 
 app.post("/add-data", upload.single("file"), async (req, res) => {
   try {
-    const result = await convertIntoJson(req?.file?.path);
+    const result = await convertIntoJson("file.xlsx");
     let leads = result["Sheet1"];
     let row1 = leads[0];
     let keys = Object.values(row1);
     leads = leads?.slice(1)?.map((each) => {
       return {
         phoneNumber: each["B"],
-        [keys[2]]: each["C"],
+        // [keys[2]]: each['C'],
         callerName: each["D"],
         patientName: each["E"],
         dateOfContact: each["F"],
         leadChannel: each["G"],
-        campaign: each["H"],
-        leadSource: each["I"],
-        coachName: each["J"],
-        age: each["K"],
-        gender: each["L"],
-        typeOfCancer: each["M"],
-        location: each["N"],
-        email: each["O"],
-        relationsToPatient: each["P"],
-        coachNotes: each["Q"],
-        inboundOutbound: each["R"],
-        relevant: each["S"],
-        interested: each["T"],
-        conv: each["U"],
-        preOP: each["V"],
+        campaign: each["I"],
+        leadSource: each["J"],
+        coachName: each["K"],
+        age: each["L"],
+        gender: each["M"],
+        typeOfCancer: each["N"],
+        location: each["O"],
+        email: each["P"],
+        relationsToPatient: each["Q"],
+        coachNotes: each["R"],
+        inboundOutbound: each["S"],
+        relevant: each["T"],
+        interested: each["U"],
+        conv: each["V"],
+        preOP: each["W"] || "",
       };
     });
 
     await addData(leads[0]);
-    console.log("Lead Added");
-    res.send({ msg: "Okay", result: leads[0] });
+    res.send({ msg: "Okay", result: leads[0], data: result });
   } catch (err) {
     console.log(err.message, "add lead err");
     res.status(400).send({ msg: err.message, status: 400 });
