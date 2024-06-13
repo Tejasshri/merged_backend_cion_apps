@@ -70,8 +70,9 @@ const connectSqlDBAndExecute = async (query) => {
     await pool.end((err) => {
       if (err) {
         pool = undefined;
+        console.log("Pool err");
       } else {
-        console.log("Pool released successfully");
+        console.log("Pool closed successfully");
       }
     });
     console.error("Trying to connect again ............ ");
