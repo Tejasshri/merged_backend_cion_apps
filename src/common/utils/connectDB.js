@@ -3,10 +3,9 @@ const mysql = require("mysql");
 const util = require("util");
 
 let mongoDB;
-let mongoClient; // Store the MongoClient instance
 let pool;
-let connection;
 
+// MongoDB Connection Function
 const connectMongoDB = async (routerName = "") => {
   try {
     if (mongoDB) {
@@ -14,14 +13,13 @@ const connectMongoDB = async (routerName = "") => {
       return mongoDB;
     }
 
-    mongoClient = new MongoClient(
+    const mongoClient = new MongoClient(
       "mongodb+srv://cionchat:Cionchat%401234@cluster0.xliikxl.mongodb.net/"
     );
 
-    await mongoClient.connect(); // Properly connect the client
-    const db = await mongoClient.db("test");
+    await mongoClient.connect();
+    mongoDB = mongoClient.db("test");
     console.log("MongoDB connected: " + routerName);
-    mongoDB = db;
     return mongoDB;
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
@@ -29,6 +27,7 @@ const connectMongoDB = async (routerName = "") => {
   }
 };
 
+// MySQL Pool Creation Function
 const createPool = async () => {
   pool = mysql.createPool({
     connectionLimit: 5,
@@ -37,45 +36,46 @@ const createPool = async () => {
     user: process.env.SQL_USER,
     password: process.env.SQL_PASSWORD,
     port: process.env.SQL_PORT,
-    connectTimeout: 10000, // Increased connect timeout in milliseconds
-    queueLimit: 1000, // Limit of queued connection requests
-    waitForConnections: true, // Enable queueing of connection requests
+    connectTimeout: 10000,
+    queueLimit: 1000,
+    waitForConnections: true,
   });
 
-  // Promisify for Node.js async/await.
   pool.getConnection = util.promisify(pool.getConnection);
+  pool.query = util.promisify(pool.query);
 };
 
+// MySQL Connection and Query Execution Function
 const connectSqlDBAndExecute = async (query) => {
   try {
     if (!pool) await createPool();
-    connection = await pool.getConnection();
+    const connection = await pool.getConnection();
     console.log("Connection successful " + connection.threadId);
 
     // Promisify the query method for this connection
     connection.query = util.promisify(connection.query);
 
-    // Perform database operation here
-    const results = await connection.query(query);
-    console.log("Query results:", results);
-
-    // Release the connection back to the pool
-    await connection.release();
-    console.log("Released connection" + connection.threadId);
-    console.log("SQL Database Connected: Operation completed successfully");
-
-    return results;
+    try {
+      const results = await connection.query(query);
+      console.log("Query results:", results);
+      return results;
+    } finally {
+      connection.release();
+      console.log("Released connection " + connection.threadId);
+    }
   } catch (error) {
     console.error("SQL Database Connection Error: ", error.message);
     await pool.end((err) => {
       if (err) {
-        pool = undefined;
-        console.log("Pool err");
+        console.error("Error closing pool:", err);
       } else {
         console.log("Pool closed successfully");
       }
+      pool = undefined;
     });
-    console.error("Trying to connect again ............ ");
+
+    console.error("Retrying connection...");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     return await connectSqlDBAndExecute(query);
   }
 };
