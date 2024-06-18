@@ -107,6 +107,7 @@ let token =
 async function addData(data) {
   console.log(data);
   try {
+    console.log("upload step 1");
     const url =
       "https://merged-backend-cion-apps.onrender.com/app2/patient/add-lead";
     const options = {
@@ -118,12 +119,15 @@ async function addData(data) {
       body: JSON.stringify(data),
     };
     const response = await fetch(url, options);
+    console.log("upload step 2");
     const resdata = await response.json();
     if (response.ok) {
       console.log("Lead Added From Excel");
+      console.log("upload step 1");
       res.send({ msg: "Success" });
     } else {
       console.log(response);
+      console.log("upload step 1");
       console.log("Something went wrong in adding lead");
       res.status(400).json({ msg: "Something went wrong" });
     }
@@ -135,7 +139,8 @@ async function addData(data) {
 
 app.post("/add-data", upload.single("file"), async (req, res) => {
   try {
-    const result = await convertIntoJson("file.xlsx");
+    const result = await convertIntoJson(req?.file?.path);
+    console.log(req?.file?.path);
     let leads = result["Sheet1"];
     let row1 = leads[0];
     let keys = Object.values(row1);
@@ -166,6 +171,8 @@ app.post("/add-data", upload.single("file"), async (req, res) => {
     });
 
     await addData(leads[0]);
+    console.log("Successfully added");
+    w;
     res.send({ msg: "Okay", result: leads[0], data: result });
   } catch (err) {
     console.log(err.message, "add lead err");

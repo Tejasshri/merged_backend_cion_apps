@@ -13,7 +13,11 @@
         file = event.target.files[0];
         let formData = new FormData();
         formData.append("file", file);
-        fetch("https://merged-backend-cion-apps.onrender.com/add-data", {
+        let urls = {
+          local: "http://localhost:3005/add-data",
+          global: "https://merged-backend-cion-apps.onrender.com/add-data",
+        };
+        fetch(urls.local, {
           method: "POST",
           body: formData,
         })
