@@ -20,6 +20,8 @@ const permissionCheck = async (req, res, next, featureName, permissionType) => {
       permissionGroups?.permissions?.[featureName]?.includes(permissionType)
     ) {
       next();
+    } else {
+      res.status(400).json({ msg: "You don't have permission to update" });
     }
   } catch (error) {
     console.log(error.message);
