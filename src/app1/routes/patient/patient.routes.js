@@ -5,6 +5,8 @@ const { addTimestamps } = require("../../../common/utils/helper.js");
 const {
   uploadToWhatsApp,
 } = require("../../../common/utils/uploadToWhatsApp.js");
+const permissionCheck = require("../../../common/middlewares/permission.middleware.js");
+
 
 const patientRouter = Router();
 
@@ -64,7 +66,7 @@ patientRouter.post("/patient-list", userAuthentication, async (req, res) => {
   }
 });
 
-patientRouter.post("/update-user-note", async (req, res) => {
+patientRouter.post("/update-user-note", userAuthentication , permissionCheck, async (req, res) => {
   try {
     const { mongoDB } = req;
     console.log(mongoDB);
