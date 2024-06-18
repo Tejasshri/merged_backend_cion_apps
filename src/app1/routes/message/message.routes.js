@@ -170,7 +170,7 @@ messageRouter.post(
   userAuthentication,
   upload.single("file"),
   async (req, res) => {
-    console.log("hit")
+    console.log("hit"); 
     let { to, type } = req.body;
     let { token } = req;
     let pData = {

@@ -31,6 +31,7 @@ const userAuthentication = async (req, res, next) => {
               req.email = payload.email;
               req.token = token;
               req.username = isUserAuthenticated.username;
+              req.role = isUserAuthenticated.role;
               console.log(payload.username, "authenticated");
               next();
             } else {
