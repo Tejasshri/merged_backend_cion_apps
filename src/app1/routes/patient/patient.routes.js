@@ -7,7 +7,6 @@ const {
 } = require("../../../common/utils/uploadToWhatsApp.js");
 const permissionCheck = require("../../../common/middlewares/permission.middleware.js");
 
-
 const patientRouter = Router();
 
 patientRouter.post("/patient-list", userAuthentication, async (req, res) => {
@@ -66,23 +65,28 @@ patientRouter.post("/patient-list", userAuthentication, async (req, res) => {
   }
 });
 
-patientRouter.post("/update-user-note", userAuthentication , permissionCheck, async (req, res) => {
-  try {
-    const { mongoDB } = req;
-    console.log(mongoDB);
-    const { note, patient_phone_number } = req.body;
-    const collection = mongoDB.collection("patients");
-    const result = await collection.updateOne(
-      { patient_phone_number },
-      { $set: { note } }
-    );
-    console.log("updated coach note");
-    res.status(200).json({ message: "Note updated successfully" });
-  } catch (error) {
-    console.error("Error updating note:", error);
-    res.status(500).json({ message: "Internal server error" });
+patientRouter.post(
+  "/update-user-note",
+  userAuthentication,
+  (...param) => permissionCheck(...param, "userNote", "update"),
+  async (req, res) => {
+    try {
+      const { mongoDB } = req;
+      console.log(mongoDB);
+      const { note, patient_phone_number } = req.body;
+      const collection = mongoDB.collection("patients");
+      const result = await collection.updateOne(
+        { patient_phone_number },
+        { $set: { note } }
+      );
+      console.log("updated coach note");
+      res.status(200).json({ message: "Note updated successfully" });
+    } catch (error) {
+      console.error("Error updating note:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
   }
-});
+);
 
 patientRouter.post("/update-patient", async (req, res) => {
   try {

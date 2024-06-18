@@ -56,8 +56,10 @@ const bindDb = async (req, res, next) => {
 
     req.mongoDB = mongoDB;
     req.connectSqlDBAndExecute = connectSqlDBAndExecute;
+
     next();
   } catch (error) {
+    console.log(error)
     res.status(500).send({ msg: "Something went wrong", status: 500 });
   }
 };
