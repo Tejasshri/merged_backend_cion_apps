@@ -66,7 +66,7 @@ const connectSqlDBAndExecute = async (query) => {
     }
   } catch (error) {
     console.error("SQL Database Connection Error: ", error.message);
-    await pool.end((err) => {
+    await pool?.end((err) => {
       if (err) {
         console.error("Error closing pool:", err);
       } else {
