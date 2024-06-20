@@ -15,13 +15,18 @@ const permissionCheck = async (req, res, next, featureName, permissionType) => {
     const permissionGroups = await permissionGroupsCollection.findOne({
       permissionGroupName: roleData.permissionGroup,
     });
-    console.log(permissionGroups);
+    
     if (
       permissionGroups?.permissions?.[featureName]?.includes(permissionType)
     ) {
       next();
     } else {
-      res.status(400).json({ msg: "You don't have permission to update" });
+      res
+        .status(401)
+        .json({
+          msg: "You don't have permission for this",
+          permission: false,
+        });
     }
   } catch (error) {
     console.log(error.message);
