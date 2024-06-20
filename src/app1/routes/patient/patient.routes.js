@@ -12,7 +12,7 @@ const patientRouter = Router();
 patientRouter.post(
   "/patient-list",
   userAuthentication,
-  (...param) => permissionCheck(...param, "patient", "read"),
+  (...param) => permissionCheck(...param, "patient", "r"),
   async (req, res) => {
     try {
       const { mongoDB } = req;
@@ -73,7 +73,7 @@ patientRouter.post(
 patientRouter.post(
   "/update-user-note",
   userAuthentication,
-  (...param) => permissionCheck(...param, "userNote", "update"),
+  (...param) => permissionCheck(...param, "user_note", "u"),
   async (req, res) => {
     try {
       const { mongoDB } = req;
@@ -93,7 +93,7 @@ patientRouter.post(
 patientRouter.post(
   "/update-patient",
   userAuthentication,
-  (...param) => permissionCheck(...param, "patient", "update"),
+  (...param) => permissionCheck(...param, "patient", "u"),
   async (req, res) => {
     try {
       const { mongoDB } = req;
