@@ -11,8 +11,8 @@ const patientRouter = Router();
 
 patientRouter.post(
   "/patient-list",
-  (...param) => permissionCheck(...param, "patient", "read"),
   userAuthentication,
+  (...param) => permissionCheck(...param, "patient", "read"),
   async (req, res) => {
     try {
       const { mongoDB } = req;
@@ -80,10 +80,7 @@ patientRouter.post(
       console.log(mongoDB);
       const { note, patient_phone_number } = req.body;
       const collection = mongoDB.collection("patients");
-      const result = await collection.updateOne(
-        { patient_phone_number },
-        { $set: { note } }
-      );
+      await collection.updateOne({ patient_phone_number }, { $set: { note } });
       console.log("updated coach note");
       res.status(200).json({ message: "Note updated successfully" });
     } catch (error) {
@@ -93,32 +90,39 @@ patientRouter.post(
   }
 );
 
-patientRouter.post("/update-patient", async (req, res) => {
-  try {
-    const { mongoDB } = req;
-    const { from, name, coach, stage, center, area } = req.body;
-    const collection = await mongoDB.collection("patients");
-    console.log(from, name, coach, stage, center, area);
-    await collection.updateOne(
-      {
-        patient_phone_number: from,
-      },
-      {
-        $set: {
-          name,
-          stage,
-          center,
-          area,
-          coach,
+patientRouter.post(
+  "/update-patient",
+  userAuthentication,
+  (...param) => permissionCheck(...param, "patient", "update"),
+  async (req, res) => {
+    try {
+      const { mongoDB } = req;
+      const { from, name, coach, stage, center, area } = req.body;
+      const collection = await mongoDB.collection("patients");
+      console.log(from, name, coach, stage, center, area);
+      await collection.updateOne(
+        {
+          patient_phone_number: from,
         },
-      }
-    );
-    console.log("updated");
-    res.status(200).json({ msg: "Updated Successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error " + error.message });
+        {
+          $set: {
+            name,
+            stage,
+            center,
+            area,
+            coach,
+          },
+        }
+      );
+      console.log("updated");
+      res.status(200).json({ msg: "Updated Successfully" });
+    } catch (error) {
+      console.log(error);
+      res
+        .status(500)
+        .json({ message: "Internal server error " + error.message });
+    }
   }
-});
+);
 
 module.exports.patientRouter = patientRouter;

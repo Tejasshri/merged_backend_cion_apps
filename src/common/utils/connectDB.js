@@ -4,6 +4,7 @@ const util = require("util");
 
 let mongoDB;
 let pool;
+let connection;
 
 // MongoDB Connection Function
 const connectMongoDB = async (routerName = "") => {
@@ -49,7 +50,7 @@ const createPool = async () => {
 const connectSqlDBAndExecute = async (query) => {
   try {
     if (!pool) await createPool();
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
     console.log("Connection successful " + connection.threadId);
 
     // Promisify the query method for this connection
@@ -81,3 +82,16 @@ const connectSqlDBAndExecute = async (query) => {
 };
 
 module.exports = { connectMongoDB, connectSqlDBAndExecute, createPool };
+
+
+// SELECT 
+// 	 roles.id, roles.name as role, roles_capability.capability_id, 
+//     capability.name AS capability_name, feature_capability.permissions, 
+//     features.name AS feature
+// FROM 
+// 	((((roles INNER JOIN roles_capability ON roles.id = roles_capability.role_id)
+//     INNER JOIN capability ON capability.id = roles_capability.capability_id) 
+//     INNER JOIN feature_capability ON roles_capability.id = feature_capability.feature_id)
+//     INNER JOIN features ON features.id = feature_capability.feature_id )
+
+// 	;
