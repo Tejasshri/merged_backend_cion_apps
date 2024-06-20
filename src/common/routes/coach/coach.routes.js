@@ -13,13 +13,34 @@ const coachRouter = Router();
 coachRouter.post("/get-coach", userAuthentication, async (req, res) => {
   try {
     const { username } = req;
-    let query = `SELECT * FROM users WHERE username = "${username}"`;
+    let query = `SELECT  username, role_id FROM users WHERE username = "${username}"`;
     const userArray = await connectSqlDBAndExecute(query);
     if (userArray.length === 0) {
       res.status(400).send({ msg: "Not Found" });
     } else if (userArray || userArray[0].username) {
-      console.log(userArray[0].username);
-      res.status(201).send({ data: { coachName: userArray[0].username } });
+      let appUserData = userArray[0];
+      console.clear();
+      console.table(appUserData);
+      res.status(201).send({ data: appUserData });
+    }
+  } catch (error) {
+    console.error("Error getting coach details:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Endpoint to get coach details
+coachRouter.post("/get-coach-list", userAuthentication, async (req, res) => {
+  try {
+    console.log("Hitted")
+    const { username } = req;
+    let query = `SELECT username, role_id FROM users`;
+    const userArray = await connectSqlDBAndExecute(query);
+    if (userArray.length === 0) {
+      res.status(400).send({ msg: "Not Found" });
+    } else if (userArray) {
+      console.log(userArray)
+      res.status(201).send({ data: userArray });
     }
   } catch (error) {
     console.error("Error getting coach details:", error);
