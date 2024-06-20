@@ -83,14 +83,13 @@ const connectSqlDBAndExecute = async (query) => {
 
 module.exports = { connectMongoDB, connectSqlDBAndExecute, createPool };
 
-
-// SELECT 
-// 	 roles.id, roles.name as role, roles_capability.capability_id, 
-//     capability.name AS capability_name, feature_capability.permissions, 
+// SELECT
+// 	 roles.id, roles.name as role, roles_capability.capability_id,
+//     capability.name AS capability_name, feature_capability.permissions,
 //     features.name AS feature
-// FROM 
+// FROM
 // 	((((roles INNER JOIN roles_capability ON roles.id = roles_capability.role_id)
-//     INNER JOIN capability ON capability.id = roles_capability.capability_id) 
+//     INNER JOIN capability ON capability.id = roles_capability.capability_id)
 //     INNER JOIN feature_capability ON roles_capability.id = feature_capability.feature_id)
 //     INNER JOIN features ON features.id = feature_capability.feature_id )
 
