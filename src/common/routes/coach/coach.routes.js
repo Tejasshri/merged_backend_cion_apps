@@ -32,14 +32,14 @@ coachRouter.post("/get-coach", userAuthentication, async (req, res) => {
 // Endpoint to get coach details
 coachRouter.post("/get-coach-list", userAuthentication, async (req, res) => {
   try {
-    console.log("Hitted")
+    console.log("Hitted");
     const { username } = req;
     let query = `SELECT username, role_id FROM users`;
     const userArray = await connectSqlDBAndExecute(query);
     if (userArray.length === 0) {
       res.status(400).send({ msg: "Not Found" });
     } else if (userArray) {
-      console.log(userArray)
+      console.log(userArray);
       res.status(201).send({ data: userArray });
     }
   } catch (error) {
@@ -102,7 +102,20 @@ coachRouter.post("/login", async (req, res) => {
         let payload = { username, password, email: result[0].email };
         console.log(payload);
         let token = sign(payload, process.env.TOKEN_SECRET_KEY);
-        res.send({ msg: "Login Success", token });
+        const user = await connectSqlDBAndExecute(query);
+        const permissions = await connectSqlDBAndExecute(`
+          SELECT 
+            features.name AS feature,
+              feature_capability.permissions
+          FROM 
+            ((((roles INNER JOIN roles_capability ON roles.id = roles_capability.role_id)
+              INNER JOIN capability ON capability.id = roles_capability.capability_id)) 
+              INNER JOIN feature_capability ON roles_capability.capability_id = feature_capability.capability_id)
+              INNER JOIN features ON feature_capability.feature_id = features.id  
+          WHERE role_id = ${user[0]?.role_id}
+          ORDER BY role_id ;
+          `);
+        res.send({ msg: "Login Success", token, accessData: permissions });
       } else {
         res.status(400).send({ msg: "Wrong password" });
       }
@@ -138,10 +151,27 @@ coachRouter.post("/delete-account", userAuthentication, async (req, res) => {
 });
 
 coachRouter.post("/verify", userAuthentication, async (req, res) => {
-  res.status(201).json({ msg: "Verified", status: 201, data: {
-    username: req.username, 
-    role_id: req.role_id
-  } });
+  const permissions = await connectSqlDBAndExecute(`
+    SELECT 
+      features.name AS feature,
+        feature_capability.permissions
+    FROM 
+      ((((roles INNER JOIN roles_capability ON roles.id = roles_capability.role_id)
+        INNER JOIN capability ON capability.id = roles_capability.capability_id)) 
+        INNER JOIN feature_capability ON roles_capability.capability_id = feature_capability.capability_id)
+        INNER JOIN features ON feature_capability.feature_id = features.id  
+    WHERE role_id = ${req?.role_id}
+    ORDER BY role_id ;
+    `);
+  res.status(201).json({
+    msg: "Verified",
+    status: 201,
+    data: {
+      username: req.username,
+      role_id: req.role_id,
+    },
+    accessData: permissions,
+  });
 });
 
 exports.coachRouter = coachRouter;
