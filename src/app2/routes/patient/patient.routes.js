@@ -76,6 +76,7 @@ patientRouter.post("/add-lead", userAuthentication, async (req, res) => {
     dateOfContact,
   } = req.body;
   try {
+    console.log(req.body, "body");
     const query = `
       INSERT INTO allleads (phoneNumber, callerName, campaign, age,  coachName, conv,
          email, gender, inboundOutbound, interested, coachNotes, leadchannel, level, location, patientName,
@@ -88,7 +89,9 @@ patientRouter.post("/add-lead", userAuthentication, async (req, res) => {
        '${preOp}', '${relationsToPatient}', '${relevant}', 'Lead',  '${typeOfCancer}', '${dateOfContact}'
       );
     `;
-    await connectSqlDBAndExecute(query);
+    console.log(query);
+    const result = await connectSqlDBAndExecute(query);
+    console.log(result, "dfdfd");
     res.send({ message: "New Lead Added Successfully" });
   } catch (err) {
     res.status(500).send({ message: err.message });
@@ -200,6 +203,7 @@ patientRouter.put(
 // Route to add the follow-up
 patientRouter.post("/add-followup", userAuthentication, async (req, res) => {
   const { id, stage } = req.body;
+  console.log(req.body, "bddf");
   let currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 1);
   // To check whether current day is sunday or not
@@ -352,12 +356,17 @@ patientRouter.get(
   userAuthentication,
   async (req, res) => {
     const { id } = req.params;
+
     const { sqlDB } = req;
     try {
       // To get all the patient followup from followup_table based lead id
 
-      let query = `SELECT * FROM followup_table WHERE leadId = ${id} AND status != 'Cancelled' ORDER BY date DESC`;
+      let query = `SELECT * FROM followup_table WHERE leadId = ${parseInt(
+        id
+      )} AND status != 'Cancelled' ORDER BY date DESC`;
+
       const result = await connectSqlDBAndExecute(query);
+      console.log(result, "dffdf");
       const convertedArray = result.map((each, index) => ({
         ...each,
         fuLead: `${each.leadStage} ${each.followupId}`,

@@ -1,10 +1,5 @@
 const { Router } = require("express");
-const { connectMongoDB } = require("../../../common/utils/connectDB.js");
 const userAuthentication = require("../../../common/middlewares/auth.middleware.js");
-const { addTimestamps } = require("../../../common/utils/helper.js");
-const {
-  uploadToWhatsApp,
-} = require("../../../common/utils/uploadToWhatsApp.js");
 const permissionCheck = require("../../../common/middlewares/permission.middleware.js");
 
 const patientRouter = Router();

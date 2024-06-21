@@ -138,7 +138,10 @@ coachRouter.post("/delete-account", userAuthentication, async (req, res) => {
 });
 
 coachRouter.post("/verify", userAuthentication, async (req, res) => {
-  res.status(201).json({ msg: "Verified" });
+  res.status(201).json({ msg: "Verified", status: 201, data: {
+    username: req.username, 
+    role_id: req.role_id
+  } });
 });
 
 exports.coachRouter = coachRouter;
