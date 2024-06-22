@@ -2,6 +2,7 @@ const { connectSqlDBAndExecute } = require("../utils/connectDB.js");
 
 const permissionCheck = async (req, res, next, featureName, permissionType) => {
   try {
+    console.log(featureName, permissionType, "ppprrr");
     const { mongoDB } = req;
     if (!mongoDB) return res.status(401).json({ msg: "DB not connected" });
 
@@ -43,8 +44,12 @@ const permissionCheck = async (req, res, next, featureName, permissionType) => {
       });
     }
   } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ msg: "Internal Server Error " + error.message });
+    console.log(
+      `Error occuerd in ${req.url} in Permission Auth __ ${error.message}`
+    );
+    res
+      .status(500)
+      .json({ msg: "Internal Server Error  sjjs " + error.message });
   }
 };
 

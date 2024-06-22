@@ -67,14 +67,21 @@ const connectSqlDBAndExecute = async (query) => {
   } catch (error) {
     console.log(query, "query");
     console.error("SQL Database Connection Error: ", error.message);
-    await pool?.end((err) => {
-      if (err) {
-        console.error("Error closing pool:", err);
-      } else {
-        console.log("Pool closed successfully");
-      }
+
+    if (error.code === "ER_USER_LIMIT_REACHED") {
+      // End an existing connection to free up space
+      console.error("User limit reached, trying to free up a connection...");
+      await pool.end((err) => {
+        if (err) {
+          console.error("Error closing pool:", err);
+        } else {
+          console.log("Pool closed successfully");
+        }
+      });
+
+      // Reset the pool to undefined to force re-creation
       pool = undefined;
-    });
+    }
 
     console.error("Retrying connection...");
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -83,15 +90,3 @@ const connectSqlDBAndExecute = async (query) => {
 };
 
 module.exports = { connectMongoDB, connectSqlDBAndExecute, createPool };
-
-// SELECT
-// 	 roles.id, roles.name as role, roles_capability.capability_id,
-//     capability.name AS capability_name, feature_capability.permissions,
-//     features.name AS feature
-// FROM
-// 	((((roles INNER JOIN roles_capability ON roles.id = roles_capability.role_id)
-//     INNER JOIN capability ON capability.id = roles_capability.capability_id)
-//     INNER JOIN feature_capability ON roles_capability.id = feature_capability.feature_id)
-//     INNER JOIN features ON features.id = feature_capability.feature_id )
-
-// 	;

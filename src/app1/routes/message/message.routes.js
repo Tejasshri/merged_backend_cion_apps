@@ -3,7 +3,10 @@ const fs = require("fs");
 const axios = require("axios");
 const FormData = require("form-data");
 const express = require("express");
-const {compressImageBuffer} = require("../../../common/utils/filesFunctions.js")
+const permissionCheck = require("../../../common/middlewares/permission.middleware.js");
+const {
+  compressImageBuffer,
+} = require("../../../common/utils/filesFunctions.js");
 const userAuthentication = require("../../../common/middlewares/auth.middleware.js");
 const { addTimestamps } = require("../../../common/utils/helper.js");
 const {
@@ -149,7 +152,7 @@ messageRouter.post(
         response.status(401).json({ msg: "Something Unexpected" });
       }
     } catch (error) {
-      console.log(error);
+      console.log(`Error occuerd in ${req.url} __ ${error.message}`);
       response
         .status(400)
         .json({ msg: `Something Went Wrong ${error.message}` });
@@ -168,9 +171,10 @@ let baseUrl = "https://merged-backend-cion-apps.onrender.com";
 messageRouter.post(
   "/recieve-media",
   userAuthentication,
+
   upload.single("file"),
   async (req, res) => {
-    console.log("hit"); 
+    console.log("hit");
     let { to, type } = req.body;
     let { token } = req;
     let pData = {
@@ -202,46 +206,55 @@ messageRouter.post(
         res.send({ msg: "Added", data: jsonData });
       })
       .catch((error) => {
-        console.log(error.message, "Error");
+        console.log(`Error occuerd in ${req.url} __ ${error.message}`);
         res.status(400).send({ msg: error.message });
       });
   }
 );
 
-messageRouter.post("/messageData", async (req, res) => {
-  try {
-    const { mongoDB } = req;
-    const { message_id, user_id, is_last = true, messageLimit } = req.body;
+messageRouter.post(
+  "/messageData",
+  userAuthentication,
+  (req, res, next) => {
+    console.log("Hitted This");
+    next();
+  },
+  (...param) => permissionCheck(...param, "patient_message", "r"),
+  async (req, res) => {
+    try {
+      const { mongoDB } = req;
+      const { message_id, user_id, is_last = true, messageLimit } = req.body;
 
-    let data;
-    const collection = await mongoDB.collection("messages");
-    if (message_id) {
-      if (is_last) {
-        data = await collection.findOne(
-          { id: message_id },
-          { projection: { media_data: 0 } }
-        );
+      let data;
+      const collection = await mongoDB.collection("messages");
+      if (message_id) {
+        if (is_last) {
+          data = await collection.findOne(
+            { id: message_id },
+            { projection: { media_data: 0 } }
+          );
+        } else {
+          data = await collection.findOne({ id: message_id });
+        }
       } else {
-        data = await collection.findOne({ id: message_id });
-      }
-    } else {
-      data = await collection.aggregate([
-        { $match: { from: user_id } },
-        { $sort: { _id: -1 } },
-        { $skip: 20 * messageLimit },
-        { $limit: 20 },
-        { $project: { media_data: 0 } },
-        { $sort: { _id: 1 } },
-      ]);
+        data = await collection.aggregate([
+          { $match: { from: user_id } },
+          { $sort: { _id: -1 } },
+          { $skip: 20 * messageLimit },
+          { $limit: 20 },
+          { $project: { media_data: 0 } },
+          { $sort: { _id: 1 } },
+        ]);
 
-      data = await data.toArray();
+        data = await data.toArray();
+      }
+      res.send({ data: data });
+    } catch (error) {
+      console.log(`Error occuerd in ${req.url} __ ${error.message}`);
+      res.status(400).json({ msg: "Something Went Wrong", status: 400 });
     }
-    res.send({ data: data });
-  } catch (error) {
-    console.log(error.message);
-    res.status(400).json({ msg: "Something Went Wrong", status: 400 });
   }
-});
+);
 
 module.exports.messageRouter = messageRouter;
 
