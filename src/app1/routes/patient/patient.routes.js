@@ -68,7 +68,7 @@ patientRouter.post(
 patientRouter.post(
   "/update-user-note",
   userAuthentication,
-  (...param) => permissionCheck(...param, "user_note", "u"),
+  (...param) => permissionCheck(...param, "user_note", "w"),
   async (req, res) => {
     try {
       const { mongoDB } = req;
