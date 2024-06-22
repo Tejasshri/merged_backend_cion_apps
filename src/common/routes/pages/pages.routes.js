@@ -14,11 +14,11 @@ pagesRouter.use(static(buildPath));
 pagesRouter.get(
   [
     "/login",
-    "/app",
-    "/dashboard",
-    "/allleads",
-    "/patient/:id",
-    "/day-wise-followups",
+    "/chat_app",
+    "/leadgen_app/dashboard",
+    "/leadgen_app/allleads",
+    "/leadgen_app/patient/:id",
+    "/leadgen_app/day-wise-followups", 
   ],
   (req, res) => {
     res.sendFile(path.join(buildPath, "index.html"), (err) => {
