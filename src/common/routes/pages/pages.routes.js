@@ -17,7 +17,7 @@ pagesRouter.get(
     "/chat_app",
     "/leadgen_app/dashboard",
     "/leadgen_app/allleads",
-    "/leadgen_app/patient/:id",
+    "/leadgen_app/patient",
     "/leadgen_app/day-wise-followups", 
   ],
   (req, res) => {
