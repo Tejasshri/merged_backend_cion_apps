@@ -449,7 +449,7 @@ patientRouter.get(
 patientRouter.get(
   "/day-wise-followups/:date",
   userAuthentication,
-  (...rest) => permissionCheck("followup_data", "r"),
+  (...rest) => permissionCheck(...rest,"followup_data", "r"),
   async (req, res) => {
     const { date } = req.params;
     try {
