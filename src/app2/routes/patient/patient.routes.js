@@ -99,41 +99,46 @@ patientRouter.post("/add-lead", userAuthentication, async (req, res) => {
   }
 });
 
-patientRouter.put("/update-lead", userAuthentication, async (req, res) => {
-  let { field, id, value, followupId } = req.body;
-  async function updateEachCell() {
-    try {
-      // To get leads based on lead id
-      // const rows = await executeQuery(
-      //   `SELECT * FROM allleads WHERE id = ${id}`
-      // );
-      /*
+patientRouter.put(
+  "/update-lead",
+  userAuthentication,
+  (...rest) => permissionCheck(...rest, "followup_data", "r"),
+  async (req, res) => {
+    let { field, id, value, followupId } = req.body;
+    async function updateEachCell() {
+      try {
+        // To get leads based on lead id
+        // const rows = await executeQuery(
+        //   `SELECT * FROM allleads WHERE id = ${id}`
+        // );
+        /*
          if the rows value length > 0  then it will update the value 
          that is updated in the frontend. For example If the coach 
          changes the PatientName to something than the field will 
          become patientName and value become the changed value */
-      const query = `UPDATE allleads SET ${field}='${value}' WHERE id = ${id}`;
-      await connectSqlDBAndExecute(query);
-      res.status(200).send("Lead updated successfully");
-    } catch (err) {
-      res.status(500).send("Failed to updated lead");
+        const query = `UPDATE allleads SET ${field}='${value}' WHERE id = ${id}`;
+        await connectSqlDBAndExecute(query);
+        res.status(200).send("Lead updated successfully");
+      } catch (err) {
+        res.status(500).send("Failed to updated lead");
+      }
     }
-  }
 
-  try {
-    // If the Filed = level and changed value = closed, than it will change all the previous stage status value to Cancelled
-    console.log(field, value);
-    if (field === "level" && value === "Closed") {
-      const query = `UPDATE followup_table SET status='Cancelled' WHERE leadId = ${id} AND status = 'Scheduled'`;
-      const result = await connectSqlDBAndExecute(query);
-      updateEachCell();
-    } else {
-      updateEachCell();
+    try {
+      // If the Filed = level and changed value = closed, than it will change all the previous stage status value to Cancelled
+      console.log(field, value);
+      if (field === "level" && value === "Closed") {
+        const query = `UPDATE followup_table SET status='Cancelled' WHERE leadId = ${id} AND status = 'Scheduled'`;
+        const result = await connectSqlDBAndExecute(query);
+        updateEachCell();
+      } else {
+        updateEachCell();
+      }
+    } catch (err) {
+      res.status(500).send("Failed to update lead");
     }
-  } catch (err) {
-    res.status(500).send("Failed to update lead");
   }
-});
+);
 
 patientRouter.put(
   "/update-followup-lead",
@@ -357,8 +362,6 @@ patientRouter.get(
   userAuthentication,
   async (req, res) => {
     const { id } = req.params;
-
-    const { sqlDB } = req;
     try {
       // To get all the patient followup from followup_table based lead id
 
@@ -449,7 +452,7 @@ patientRouter.get(
 patientRouter.get(
   "/day-wise-followups/:date",
   userAuthentication,
-  (...rest) => permissionCheck(...rest,"followup_data", "r"),
+  (...rest) => permissionCheck(...rest, "followup_data", "r"),
   async (req, res) => {
     const { date } = req.params;
     try {
