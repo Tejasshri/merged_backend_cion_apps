@@ -5,6 +5,7 @@ const userAuthentication = require("../../../common/middlewares/auth.middleware.
 const {
   connectSqlDBAndExecute,
 } = require("../../../common/utils/connectDB.js");
+const permissionCheck = require("../../../common/middlewares/permission.middleware.js");
 
 const patientRouter = Router();
 
@@ -448,6 +449,7 @@ patientRouter.get(
 patientRouter.get(
   "/day-wise-followups/:date",
   userAuthentication,
+  (...rest) => permissionCheck("followup_data", "r"),
   async (req, res) => {
     const { date } = req.params;
     try {
