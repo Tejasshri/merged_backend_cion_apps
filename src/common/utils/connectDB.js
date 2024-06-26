@@ -53,7 +53,6 @@ const connectSqlDBAndExecute = async (query) => {
     connection = await pool.getConnection();
     console.log("Connection successful " + connection.threadId);
 
-    // Promisify the query method for this connection
     connection.query = util.promisify(connection.query);
 
     try {
@@ -65,11 +64,9 @@ const connectSqlDBAndExecute = async (query) => {
       console.log("Released connection " + connection.threadId);
     }
   } catch (error) {
-    console.log(query, "query");
     console.error("SQL Database Connection Error: ", error.message);
 
     if (error.code === "ER_USER_LIMIT_REACHED") {
-      // End an existing connection to free up space
       console.error("User limit reached, trying to free up a connection...");
       await pool.end((err) => {
         if (err) {
@@ -79,13 +76,14 @@ const connectSqlDBAndExecute = async (query) => {
         }
       });
 
-      // Reset the pool to undefined to force re-creation
-      pool = undefined;
-    }
+      pool = undefined; // Reset the pool to force re-creation
 
-    console.error("Retrying connection...");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return await connectSqlDBAndExecute(query);
+      console.error("Retrying connection...");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return await connectSqlDBAndExecute(query);
+    } else {
+      throw error; // Re-throw error if it's not a connection limit error
+    }
   }
 };
 
