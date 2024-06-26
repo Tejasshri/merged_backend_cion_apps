@@ -82,7 +82,7 @@ const connectSqlDBAndExecute = async (query) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       return await connectSqlDBAndExecute(query);
     } else {
-      throw error; // Re-throw error if it's not a connection limit error
+      console.log("Error ..."); // Re-throw error if it's not a connection limit error
     }
   }
 };
