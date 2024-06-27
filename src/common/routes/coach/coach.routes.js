@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const { sign, verify } = require("jsonwebtoken");
 const userAuthentication = require("../../middlewares/auth.middleware.js");
 const { connectSqlDBAndExecute } = require("../../utils/connectDB.js");
+const { groupByRole } = require("../../utils/groupByRoles.js");
 
 const coachRouter = Router();
 // Endpoint to get coach's patient list
@@ -146,7 +147,7 @@ coachRouter.post("/delete-account", userAuthentication, async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.send({ msg: error.message });
+    res.status(500).send({ msg: error.message });
   }
 });
 
@@ -173,5 +174,61 @@ coachRouter.post("/verify", userAuthentication, async (req, res) => {
     accessData: permissions,
   });
 });
+
+coachRouter.post(
+  "/admin/roles-capability",
+  userAuthentication,
+  async (req, res) => {
+    try {
+      if (req.role_id !== 1)
+        return res.status(401).json({ json: "Not A Admin! ...Unauthorized" });
+      const query = `    
+        SELECT 
+          feature_capability.id as feature_capability_id, capability.name as capability_name ,roles.id, roles.name as role, roles_capability.capability_id, 
+            capability.name AS capability_name, feature_capability.permissions, 
+            features.name AS feature, features.id as feature_id , features.app_name
+        FROM 
+          ((((roles JOIN roles_capability ON roles.id = roles_capability.role_id)
+            JOIN capability ON capability.id = roles_capability.capability_id)) 
+            JOIN feature_capability ON roles_capability.capability_id = feature_capability.capability_id)
+            JOIN features ON feature_capability.feature_id = features.id  
+        ORDER BY capability.id ;
+    `;
+      const rolesCapability = await connectSqlDBAndExecute(query);
+      const groupedData = groupByRole(rolesCapability);
+      res.status(200).json({ data: groupedData });
+    } catch (error) {
+      res.status(500).json({ msg: error.message });
+    }
+  }
+);
+
+coachRouter.put(
+  "/update-permission",
+  userAuthentication,
+  async (req, res, next) => {
+    try {
+      const { cap_feature_id, permission } = req.body;
+      if (req.role_id !== 1)
+        return res.status(401).json({ json: "Not A Admin! ...Unauthorized" });
+      const query = `SELECT * FROM feature_capability WHERE feature_capability.id = ${cap_feature_id} ;`;
+      let featureCapability = await connectSqlDBAndExecute(query);
+      let prevPermission = featureCapability[0]?.permissions;
+      if (featureCapability?.permissions?.includes(permission)) {
+        prevPermission = prevPermission.replace(permission, "");
+      } else {
+        prevPermission = prevPermission + permission;
+      }
+
+      await connectSqlDBAndExecute(`
+          UPDATE feature_capability SET permissions = "${prevPermission}"
+          WHERE feature_capability.id = ${cap_feature_id}
+      `);
+      res.send({ msg: "Done Successfully" });
+    } catch (error) {
+      res.status(500).json({ msg: error.message });
+    }
+  }
+);
 
 exports.coachRouter = coachRouter;
