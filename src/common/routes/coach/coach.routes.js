@@ -16,7 +16,7 @@ coachRouter.post("/get-coach", userAuthentication, async (req, res) => {
     const { username } = req;
     let query = `SELECT  username, role_id FROM users WHERE username = "${username}"`;
     const userArray = await connectSqlDBAndExecute(query);
-    if (userArray.length === 0) {
+    if (!userArray?.length) {
       res.status(400).send({ msg: "Not Found" });
     } else if (userArray || userArray[0].username) {
       let appUserData = userArray[0];
@@ -101,7 +101,6 @@ coachRouter.post("/login", async (req, res) => {
       );
       if (isPasswordMatched) {
         let payload = { username, password, email: result[0].email };
-        console.log(payload);
         let token = sign(payload, process.env.TOKEN_SECRET_KEY);
         const user = await connectSqlDBAndExecute(query);
         const permissions = await connectSqlDBAndExecute(`
@@ -175,6 +174,30 @@ coachRouter.post("/verify", userAuthentication, async (req, res) => {
   });
 });
 
+coachRouter.post("/get-permission", userAuthentication, async (req, res) => {
+  try {
+    if (req.role_id !== 1)
+      return res.status(401).json({ json: "Not A Admin! ...Unauthorized" });
+    const query = `    
+      SELECT 
+        feature_capability.id as feature_capability_id, capability.name as capability_name ,roles.id, roles.name as role, roles_capability.capability_id, 
+          capability.name AS capability_name, feature_capability.permissions, 
+          features.name AS feature, features.id as feature_id , features.app_name
+      FROM 
+        ((((roles JOIN roles_capability ON roles.id = roles_capability.role_id)
+          JOIN capability ON capability.id = roles_capability.capability_id)) 
+          JOIN feature_capability ON roles_capability.capability_id = feature_capability.capability_id)
+          JOIN features ON feature_capability.feature_id = features.id  
+      WHERE role_id = ${req?.role_id}
+      ORDER BY capability.id ;
+  `;
+    const rolesCapability = await connectSqlDBAndExecute(query);
+    res.status(200).json({ data: rolesCapability });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+});
+
 coachRouter.post(
   "/admin/roles-capability",
   userAuthentication,
@@ -203,32 +226,29 @@ coachRouter.post(
   }
 );
 
-coachRouter.put(
-  "/update-permission",
-  userAuthentication,
-  async (req, res, next) => {
-    try {
-      const { cap_feature_id, permission } = req.body;
-      if (req.role_id !== 1)
-        return res.status(401).json({ json: "Not A Admin! ...Unauthorized" });
-      const query = `SELECT * FROM feature_capability WHERE feature_capability.id = ${cap_feature_id} ;`;
-      let featureCapability = await connectSqlDBAndExecute(query);
-      let prevPermission = featureCapability[0]?.permissions;
-      if (featureCapability?.permissions?.includes(permission)) {
-        prevPermission = prevPermission.replace(permission, "");
-      } else {
-        prevPermission = prevPermission + permission;
-      }
+coachRouter.put("/update-permission", userAuthentication, async (req, res) => {
+  try {
+    const { cap_feature_id, permission } = req.body;
+    if (req.role_id !== 1)
+      return res.status(401).json({ json: "Not A Admin! ...Unauthorized" });
+    const query = `SELECT * FROM feature_capability WHERE feature_capability.id = ${cap_feature_id} ;`;
+    let featureCapability = await connectSqlDBAndExecute(query);
+    let prevPermission = featureCapability[0]?.permissions;
+    // console.log(featureCapability, "featureCapability")
+    if (featureCapability[0]?.permissions?.includes(permission.toString())) {
+      prevPermission = prevPermission.replace(permission, "");
+    } else {
+      prevPermission = prevPermission + permission;
+    }
 
-      await connectSqlDBAndExecute(`
+    await connectSqlDBAndExecute(`
           UPDATE feature_capability SET permissions = "${prevPermission}"
           WHERE feature_capability.id = ${cap_feature_id}
       `);
-      res.send({ msg: "Done Successfully" });
-    } catch (error) {
-      res.status(500).json({ msg: error.message });
-    }
+    res.send({ msg: "Done Successfully" });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
   }
-);
+});
 
 exports.coachRouter = coachRouter;

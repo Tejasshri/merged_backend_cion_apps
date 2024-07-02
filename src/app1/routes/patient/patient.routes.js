@@ -60,7 +60,7 @@ patientRouter.post(
       res.json({ data: data });
     } catch (error) {
       console.error(`Error occured in getting patient list`);
-      res.status(500).json({ msg: "Internal Server Error", status: 500 });
+      res.status(500).json({ msg: "Internal Server Error omfo", status: 500 });
     }
   }
 );

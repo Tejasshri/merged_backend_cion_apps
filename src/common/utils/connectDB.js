@@ -28,6 +28,8 @@ const connectMongoDB = async (routerName = "") => {
   }
 };
 
+// connection.connect(err, (result) => {});
+
 // MySQL Pool Creation Function
 const createPool = async () => {
   pool = mysql.createPool({
@@ -46,43 +48,43 @@ const createPool = async () => {
   pool.query = util.promisify(pool.query);
 };
 
-// MySQL Connection and Query Execution Function
 const connectSqlDBAndExecute = async (query) => {
+  let connection;
   try {
-    if (!pool) await createPool();
-    connection = await pool.getConnection();
+    if (!pool) await createPool(); // Create pool if not already exists
+    connection = await pool.getConnection(); // Obtain a connection
     console.log("Connection successful " + connection.threadId);
 
-    connection.query = util.promisify(connection.query);
+    connection.query = util.promisify(connection.query); // Promisify query method
 
-    try {
-      const results = await connection.query(query);
-      console.log("Query results:", results);
-      return results;
-    } finally {
-      connection.release();
-      console.log("Released connection " + connection.threadId);
-    }
+    const results = await connection.query(query); // Execute the query
+    console.log("Query results:", results);
+    return results;
   } catch (error) {
     console.error("SQL Database Connection Error: ", error.message);
 
+    // Handle specific error codes
     if (error.code === "ER_USER_LIMIT_REACHED") {
       console.error("User limit reached, trying to free up a connection...");
-      await pool.end((err) => {
-        if (err) {
-          console.error("Error closing pool:", err);
-        } else {
-          console.log("Pool closed successfully");
-        }
-      });
-
-      pool = undefined; // Reset the pool to force re-creation
+      await pool.end(); // End the pool to release all connections
+      pool = undefined; // Reset pool to force re-creation
 
       console.error("Retrying connection...");
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return await connectSqlDBAndExecute(query);
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second
+      return await connectSqlDBAndExecute(query); // Retry connection
     } else {
-      console.log("Error ..."); // Re-throw error if it's not a connection limit error
+      console.error("Error:", error); // Log other errors
+      throw error; // Re-throw the error for higher level handling
+    }
+  } finally {
+    // Ensure connection is released back to the pool
+    if (connection) {
+      try {
+        connection.release(); // Release the connection
+        console.log("Released connection " + connection.threadId);
+      } catch (e) {
+        console.error("Error releasing connection:", e);
+      }
     }
   }
 };
