@@ -168,10 +168,10 @@ messageRouter.use(
 
 let baseUrl = "https://merged-backend-cion-apps.onrender.com";
 // baseUrl = "http://localhost:3005"
+baseUrl = "http://54.90.88.158:3000"
 messageRouter.post(
   "/recieve-media",
   userAuthentication,
-
   upload.single("file"),
   async (req, res) => {
     console.log("hit");
