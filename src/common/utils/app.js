@@ -36,6 +36,7 @@ const {
   messageRouter,
 } = require("./src/app1/routes/message/message.routes.js");
 
+createPool();
 
 function formatDate(date) {
   const year = date.getFullYear();
@@ -58,7 +59,7 @@ const bindDb = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.log(error);
+    console.log(error)
     res.status(500).send({ msg: "Something went wrong", status: 500 });
   }
 };

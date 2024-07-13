@@ -163,6 +163,7 @@ coachRouter.post("/verify", userAuthentication, async (req, res) => {
     WHERE role_id = ${req?.role_id}
     ORDER BY role_id ;
     `);
+    console.log(permissions)
   res.status(201).json({
     msg: "Verified",
     status: 201,

@@ -1,13 +1,14 @@
 const { MongoClient } = require("mongodb");
-const mysql = require("mysql");
+const mysql = require("mysql2");
+const { Client } = require("ssh2");
+const fs = require("fs");
 const util = require("util");
 
 let mongoDB;
 let pool;
-let connection;
 
-// MongoDB Connection Function
-const connectMongoDB = async (routerName = "") => {
+// MongoDB Connection Function (Your existing function)
+const connectMongoDB = async () => {
   try {
     if (mongoDB) {
       console.log("Returning existing MongoDB connection");
@@ -15,12 +16,12 @@ const connectMongoDB = async (routerName = "") => {
     }
 
     const mongoClient = new MongoClient(
-      "mongodb://cion:cion11224@127.0.0.1:27017/admin?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.2.9"
+      "mongodb://tejas:tejas1122@127.0.0.1:27017/admin?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.2.9"
     );
 
     await mongoClient.connect();
     mongoDB = mongoClient.db("test");
-    console.log("MongoDB connected: " + routerName);
+    console.log("MongoDB connected");
     return mongoDB;
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
@@ -28,62 +29,78 @@ const connectMongoDB = async (routerName = "") => {
   }
 };
 
-// connection.connect(err, (result) => {});
+// SSH Configuration for MySQL
+const sshConfig = {
+  host: "43.205.43.32",
+  port: 22,
+  username: "bitnami",
+  privateKey: fs.readFileSync("src/common/utils/cancerclinicNew.pem"), // Adjust the path to your SSH private key file
+};
+console.log(sshConfig)
+
+// MySQL Database Configuration
+const dbConfig = {
+  host: "43.205.43.32",
+  port: 22,
+  user: "bn_wordpress",
+  password: process.env.NEW_SQL_PASSWORD, // Replace with actual MySQL password from vault
+  database: process.env.NEW_SQL_DATABASE, // Replace with actual database name
+};
+
+// Function to set up SSH tunnel for MySQL
+const setupSSHConnection = () => {
+  return new Promise((resolve, reject) => {
+    const sshClient = new Client();
+    sshClient
+      .on("ready", () => {
+        sshClient.forwardOut(
+          "127.0.0.1",
+          3306,
+          dbConfig.host,
+          dbConfig.port,
+          (err, stream) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+            resolve(stream);
+          }
+        );
+      })
+      .connect(sshConfig);
+
+    sshClient.on("error", (err) => {
+      reject(err);
+    });
+  });
+};
 
 // MySQL Pool Creation Function
 const createPool = async () => {
+  const stream = await setupSSHConnection();
   pool = mysql.createPool({
+    ...dbConfig,
     connectionLimit: 5,
-    host: process.env.NEW_SQL_HOST,
-    database: process.env.NEW_SQL_DATABASE,
-    user: process.env.NEW_SQL_USER,
-    password: process.env.NEW_SQL_PASSWORD,
-    port: process.env.NEW_SQL_PORT,
     connectTimeout: 10000,
     queueLimit: 1000,
     waitForConnections: true,
+    stream,
   });
 
-  pool.getConnection = util.promisify(pool.getConnection);
   pool.query = util.promisify(pool.query);
 };
 
+// Function to Connect to MySQL and Execute a Query
 const connectSqlDBAndExecute = async (query) => {
-  let connection;
   try {
-    if (!pool) await createPool(); // Create pool if not already exists
-    connection = await pool.getConnection(); // Obtain a connection
-    console.log("Connection successful " + connection.threadId);
-    connection.query = util.promisify(connection.query); // Promisify query method
-    const results = await connection.query(query); // Execute the query
+    if (!pool) await createPool();
+    const results = await pool.query(query);
     console.log("Query results:", results);
     return results;
   } catch (error) {
-    console.error("SQL Database Connection Error: ", error.message);
-    // Handle specific error codes
-    if (error.code === "ER_USER_LIMIT_REACHED") {
-      console.error("User limit reached, trying to free up a connection...");
-      await pool.end(); // End the pool to release all connections
-      pool = undefined; // Reset pool to force re-creation
-
-      console.error("Retrying connection...");
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second
-      return await connectSqlDBAndExecute(query); // Retry connection
-    } else {
-      console.error("Error:", error); // Log other errors
-      throw error; // Re-throw the error for higher level handling
-    }
-  } finally {
-    // Ensure connection is released back to the pool
-    if (connection) {
-      try {
-        connection.release(); // Release the connection
-        console.log("Released connection " + connection.threadId);
-      } catch (e) {
-        console.error("Error releasing connection:", e);
-      }
-    }
+    console.error("SQL Database Connection Error:", error.message);
+    throw error;
   }
 };
 
-module.exports = { connectMongoDB, connectSqlDBAndExecute, createPool };
+module.exports = { connectMongoDB, connectSqlDBAndExecute };
