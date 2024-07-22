@@ -18,7 +18,7 @@ const connectMongoDB = async (routerName = "") => {
     }
 
     const mongoClient = new MongoClient(
-      "mongodb+srv://cionchat:Cionchat%401234@cluster0.xliikxl.mongodb.net/" ||
+      "mongodb+srv://cionchat:Cionchat%401234@cluster0.xliikxl.mongodb.net/" &&
         "mongodb://tejas:tejas1122@127.0.0.1:27017/admin?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.2.9"
     );
 
