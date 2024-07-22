@@ -59,7 +59,7 @@ const bindDb = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).send({ msg: "Something went wrong", status: 500 });
   }
 };
@@ -72,8 +72,9 @@ app.use((req, res, next) => {
 });
 
 // Defining Router App1
-app.use("/", pagesRouter);
-// app.use("/app1/coach", bindDb, coachRouter); // Mount coachRouter under /app1
+
+// all the url for frontend
+app.use("/", pagesRouter); // app.use("/app1/coach", bindDb, coachRouter); // Mount coachRouter under /app1
 app.use("/common/user", bindDb, coachRouter); // Mount coachRouter under /app1
 app.use(bindDb, webhookPatientRouter); // Mount patientRouter //
 app.use("/app1/patient", bindDb, patientRouter);
@@ -87,22 +88,6 @@ app.use("/app2/patient", bindDb, crmPatientRouter);
 //   next()
 // });
 
-app.use("/page", express.static(path.join(__dirname, "page")));
-app.get("/page", (req, res) => {
-  res.sendFile(path.join(__dirname, "page", "index.html"));
-});
-
-app.use("/page", express.static("uploads"));
-app.post("/page", upload.single("file"), async (req, res) => {
-  try {
-    console.log("File uploaded");
-    console.log(req?.file?.path);
-
-    res.send({ msg: "Okay" });
-  } catch (error) {
-    res.status(400).json({ msg: "Okay" });
-  }
-});
 
 let token =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhd2FuIiwicGFzc3dvcmQiOiIxMjM0NSIsImVtYWlsIjoicGF3YW5AZ21haWwuY29tIiwiaWF0IjoxNzE4MTA1NDk1fQ.BZ1XYpFxplx1zQGXfqnFUbSPzFRcUQI5ZXvtN8T10BA";
@@ -139,48 +124,55 @@ async function addData(data) {
   }
 }
 
-app.post("/add-data", upload.single("file"), async (req, res) => {
-  try {
-    const result = await convertIntoJson(req?.file?.path);
-    console.log(req?.file?.path);
-    let leads = result["Sheet1"];
-    let row1 = leads[0];
-    let keys = Object.values(row1);
-    leads = leads?.slice(1)?.map((each) => {
-      return {
-        phoneNumber: each["B"],
-        // [keys[2]]: each['C'],
-        callerName: each["D"],
-        patientName: each["E"],
-        dateOfContact: each["F"],
-        leadChannel: each["G"],
-        campaign: each["I"],
-        leadSource: each["J"],
-        coachName: each["K"],
-        age: each["L"],
-        gender: each["M"],
-        typeOfCancer: each["N"],
-        location: each["O"],
-        email: each["P"],
-        relationsToPatient: each["Q"],
-        coachNotes: each["R"],
-        inboundOutbound: each["S"],
-        relevant: each["T"],
-        interested: each["U"],
-        conv: each["V"],
-        preOP: each["W"] || "",
-      };
-    });
+app.post(
+  "/add-data",
+  (req, res) => {
+    res.send({ msg: "Not able" });
+  },
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      const result = await convertIntoJson(req?.file?.path);
+      console.log(req?.file?.path);
+      let leads = result["Sheet1"];
+      let row1 = leads[0];
+      let keys = Object.values(row1);
+      leads = leads?.slice(1)?.map((each) => {
+        return {
+          phoneNumber: each["B"],
+          // [keys[2]]: each['C'],
+          callerName: each["D"],
+          patientName: each["E"],
+          dateOfContact: each["F"],
+          leadChannel: each["G"],
+          campaign: each["I"],
+          leadSource: each["J"],
+          coachName: each["K"],
+          age: each["L"],
+          gender: each["M"],
+          typeOfCancer: each["N"],
+          location: each["O"],
+          email: each["P"],
+          relationsToPatient: each["Q"],
+          coachNotes: each["R"],
+          inboundOutbound: each["S"],
+          relevant: each["T"],
+          interested: each["U"],
+          conv: each["V"],
+          preOP: each["W"] || "",
+        };
+      });
 
-    await addData(leads[0]);
-    console.log("Successfully added");
-    w;
-    res.send({ msg: "Okay", result: leads[0], data: result });
-  } catch (err) {
-    console.log(err.message, "add lead err");
-    res.status(400).send({ msg: err.message, status: 400 });
+      await addData(leads[0]);
+      console.log("Successfully added");
+      w;
+      res.send({ msg: "Okay", result: leads[0], data: result });
+    } catch (err) {
+      console.log(err.message, "add lead err");
+      res.status(400).send({ msg: err.message, status: 400 });
+    }
   }
-});
+);
 
 module.exports = server;
 // --- Written By Tejas --- //

@@ -26,12 +26,12 @@ const permissionCheck = async (req, res, next, featureName, permissionType) => {
     `;
     const hasPermission = await connectSqlDBAndExecute(query);
     // console.clear()
-    console.log(
-      hasPermission,
-      (hasPermission.length > 0 &&
-        hasPermission[0].permissions.includes(permissionType)) ||
-        "don't have permission for the " + featureName
-    );
+    // console.log(
+    //   hasPermission,
+    //   (hasPermission.length > 0 &&
+    //     hasPermission[0].permissions.includes(permissionType)) ||
+    //     "don't have permission for the " + featureName
+    // );
     if (
       hasPermission.length > 0 &&
       hasPermission[0].permissions.includes(permissionType)

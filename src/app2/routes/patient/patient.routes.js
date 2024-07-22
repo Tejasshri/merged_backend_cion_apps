@@ -18,19 +18,20 @@ function formatDate(date) {
 
 patientRouter.get("/get-leads", userAuthentication, async (req, res) => {
   try {
-    const query = `SELECT * FROM allleads ORDER BY id DESC `;
+    const query = `SELECT * FROM allleads ORDER BY id DESC`;
     const result = await connectSqlDBAndExecute(query);
     const convertedArray = result.map((each) => {
       const date = new Date(each.dateOfContact);
       return {
         ...each,
-        dateOfContact: formatDate(each.dateOfContact),
+        dateOfContact: formatDate(date),
       };
     });
     return res.json(convertedArray);
     // const rows = await executeQuery(`SELECT * FROM allleads ORDER BY id DESC `);
     // // To convert the date into YYYY-MM-DD format converting the recieved data
   } catch (err) {
+    console.log(err.message);
     res.status(500).send("Error executing query");
   }
 });
@@ -452,7 +453,7 @@ patientRouter.get(
 patientRouter.get(
   "/day-wise-followups/:date",
   userAuthentication,
-  (...rest) => permissionCheck(...rest, "followup_data", "r"),
+  (...rest) => permissionCheck(...rest, "complete_data", "r"),
   async (req, res) => {
     const { date } = req.params;
     try {
@@ -475,6 +476,28 @@ patientRouter.get(
       return res.status(200).send(convertedArray);
     } catch (err) {
       res.status(400).send(err);
+    }
+  }
+);
+
+patientRouter.delete(
+  "/delete-lead",
+  userAuthentication,
+  (...rest) => permissionCheck(...rest, "followup_data", "d"),
+  async (req, res) => {
+    const { leadId } = req.body;
+    try {
+      let query = `DELETE FROM allleads WHERE id = ${leadId};`;
+      await connectSqlDBAndExecute(query);
+      query = `DELETE FROM followup_table WHERE leadId = ${leadId};`;
+      await connectSqlDBAndExecute(query);
+      res.status(200).json({
+        msg: "Deleted successfully",
+      });
+    } catch (error) {
+      res.status(401).json({
+        msg: `Error While Deleting ${error.message}`,
+      });
     }
   }
 );

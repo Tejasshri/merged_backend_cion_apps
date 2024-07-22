@@ -1,0 +1,36 @@
+http://54.90.88.158:3000/app1/patient/patient-list
+http://54.90.88.158:3000/app1/patient/update-user-note
+http://54.90.88.158:3000/app1/patient/update-patient
+http://54.90.88.158:3000/app1/patient/message
+http://54.90.88.158:3000/app1/patient/recieve-media
+http://54.90.88.158:3000/app1/patient/messageData
+
+http://54.90.88.158:3000/webhook GET for verification of whatsapp 
+http://54.90.88.158:3000/webhook POST for receive messages from whatsapp
+
+http://54.90.88.158:3000/app2/patient/get-leads
+http://54.90.88.158:3000/app2/patient/patiens/:id
+http://54.90.88.158:3000/app2/patient/add-lead
+http://54.90.88.158:3000/app2/patient/update-lead
+http://54.90.88.158:3000/app2/patient/update-followup-lead
+http://54.90.88.158:3000/app2/patient/add-followup
+http://54.90.88.158:3000/app2/patient/update-followup-dates
+http://54.90.88.158:3000/app2/patient/patient-followups/:id
+http://54.90.88.158:3000/app2/patient/dashboard-followups
+http://54.90.88.158:3000/app2/patient/day-wise-followups/:date
+http://54.90.88.158:3000/app2/patient/delete-lead
+http://54.90.88.158:3000/app2/patient/day-wise-followups/:date
+http://54.90.88.158:3000/app2/patient/day-wise-followups/:date
+
+
+http://54.90.88.158:3000/common/user/get-coach
+http://54.90.88.158:3000/common/user/get-coach-list
+http://54.90.88.158:3000/common/user/register
+http://54.90.88.158:3000/common/user/login
+http://54.90.88.158:3000/common/user/delete-account
+http://54.90.88.158:3000/common/user/verify
+http://54.90.88.158:3000/common/user/get-permission
+http://54.90.88.158:3000/common/user/admin/roles-capability
+http://54.90.88.158:3000/common/user/update-permission
+http://54.90.88.158:3000/common/user/update-permission
+http://54.90.88.158:3000/common/user/update-permission

@@ -18,11 +18,12 @@ const connectMongoDB = async (routerName = "") => {
     }
 
     const mongoClient = new MongoClient(
-      "mongodb+srv://cionchat:Cionchat%401234@cluster0.xliikxl.mongodb.net/"
+      "mongodb+srv://cionchat:Cionchat%401234@cluster0.xliikxl.mongodb.net/" ||
+        "mongodb://tejas:tejas1122@127.0.0.1:27017/admin?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.2.9"
     );
 
     await mongoClient.connect();
-    mongoDB = mongoClient.db("test");
+    mongoDB = mongoClient.db("admin");
     console.log("MongoDB connected: " + routerName);
     return mongoDB;
   } catch (error) {
@@ -43,90 +44,86 @@ const dbServer = {
 
 const createPool = async () => {
   try {
-    if (!pool) {
-      const tunnelConfig = {
-        host: process.env.DB_SSH_HOST,
-        port: 22,
-        username: process.env.DB_SSH_USER,
-        privateKey: fs.readFileSync(path.join(__dirname, "ssh_key.pem")),
-      };
+    const tunnelConfig = {
+      host: process.env.DB_SSH_HOST,
+      port: 22,
+      username: process.env.DB_SSH_USER,
+      privateKey: fs.readFileSync(path.join(__dirname, "ssh_key.pem")),
+    };
 
-      const forwardConfig = {
-        srcHost: "127.0.0.1",
-        srcPort: 3306,
-        dstHost: dbServer.host,
-        dstPort: dbServer.port,
-      };
+    const forwardConfig = {
+      srcHost: "127.0.0.1",
+      srcPort: 3306,
+      dstHost: dbServer.host,
+      dstPort: dbServer.port,
+    };
 
-      // Establish SSH tunnel
-      sshClient = new Client();
-      await new Promise((resolve, reject) => {
-        sshClient
-          .on("ready", () => {
-            sshClient.forwardOut(
-              forwardConfig.srcHost,
-              forwardConfig.srcPort,
-              forwardConfig.dstHost,
-              forwardConfig.dstPort,
-              (err, stream) => {
-                if (err) reject(err);
+    // Establish SSH tunnel
+    sshClient = new Client();
+    await new Promise((resolve, reject) => {
+      sshClient
+        .on("ready", () => {
+          sshClient.forwardOut(
+            forwardConfig.srcHost,
+            forwardConfig.srcPort,
+            forwardConfig.dstHost,
+            forwardConfig.dstPort,
+            (err, stream) => {
+              if (err) reject(err);
 
-                pool = mysql.createPool({
-                  ...dbServer,
-                  stream, // Use the SSH stream for connection
-                });
+              pool = mysql.createPool({
+                ...dbServer,
+                waitForConnections: true,
+                connectionLimit: 1,
+                stream, // Use the SSH stream for connection
+              });
 
-                // Promisify the pool methods
-                pool.getConnection = util.promisify(pool.getConnection);
-                pool.query = util.promisify(pool.query);
+              console.log("pool created");
 
-                console.log("MySQL pool with SSH tunnel connected");
-                resolve();
-              }
-            );
-          })
-          .on("error", (err) => {
-            console.error("SSH tunnel connection error:", err);
+              // Promisify the pool methods
+              pool.getConnection = util.promisify(pool.getConnection);
+              pool.query = util.promisify(pool.query);
+
+              console.log("MySQL pool with SSH tunnel connected");
+              resolve();
+            }
+          );
+        })
+        .on("error", (err) => {
+          if (err.code === "ECONNRESET") {
+            reconnectMySQL();
+          } else {
             reject(err);
-          })
-          .connect(tunnelConfig);
-      });
-    }
+          }
+        })
+        .connect(tunnelConfig);
+    });
   } catch (error) {
     console.error("Error creating MySQL pool with SSH tunnel:", error);
     throw error;
   }
 };
 
+// createPool();
+
 // Function to connect to SQL DB through SSH and execute query
 const connectSqlDBAndExecute = async (query) => {
-  let connection;
+  console.log(query);
   try {
     if (!pool) await createPool(); // Ensure pool is initialized
-
-    connection = await pool.getConnection(); // Obtain a connection from the pool
-    console.log("Connection successful " + connection.threadId);
-
-    connection.query = util.promisify(connection.query); // Promisify query method
-
-    const results = await connection.query(query); // Execute the query
-    console.log("Query results:", results);
-    return results;
+    const rows = await pool.query(query);
+    console.log(rows);
+    return rows;
   } catch (error) {
     console.error("SQL Database Connection Error: ", error.message);
-
-    // Handle specific error codes or scenarios
-    if (error.code === "ER_NET_PACKETS_OUT_OF_ORDER" || error.code === "ER_USER_LIMIT_REACHED") {
+    if (
+      error.code === "ER_NET_PACKETS_OUT_OF_ORDER" ||
+      error.code === "ER_USER_LIMIT_REACHED"
+    ) {
       console.error("Retrying connection...");
       await reconnectMySQL(); // Retry connection
     } else {
-      throw error; // Re-throw other errors for higher level handling
-    }
-  } finally {
-    // Ensure connection is released back to the pool
-    if (connection) {
-      connection.release(); // Release the connection back to the pool
-      console.log("Released connection " + connection.threadId);
+      console.log(error.message, error.code); // Re-throw other errors for higher level handling
     }
   }
 };

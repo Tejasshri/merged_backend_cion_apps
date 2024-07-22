@@ -37,7 +37,10 @@ patientRouter.post(
       } else {
         // If no specific user number is provided, get all patients
         data = await collection.find({}, { messages: 1 }).toArray();
-
+        console.log(data, "Data")
+        if (!data?.length) {
+          return res.status(204).json({ data: [] });
+        }
         for (let userData of data) {
           const lastMessageId =
             userData.message_ids?.[userData.message_ids.length - 1];
@@ -59,8 +62,8 @@ patientRouter.post(
 
       res.json({ data: data });
     } catch (error) {
-      console.error(`Error occured in getting patient list`);
-      res.status(500).json({ msg: "Internal Server Error omfo", status: 500 });
+      console.error(`Error occured in getting patient list ${error.message}`);
+      res.status(500).json({ msg: "Internal Server Error", status: 500 });
     }
   }
 );

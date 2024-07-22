@@ -19,8 +19,10 @@ const userAuthentication = async (req, res, next) => {
           res.status(401).send({ msg: "Invalid Token" });
         } else {
           const query = `SELECT * FROM users WHERE username = "${payload.username}"`;
+          // console.log(query);
           const result = await connectSqlDBAndExecute(query);
-          const isUserAuthenticated = result[0];
+          console.log(result);
+          const isUserAuthenticated = result && result[0];
 
           if (isUserAuthenticated) {
             const isPasswordMatched = await compare(
@@ -32,6 +34,9 @@ const userAuthentication = async (req, res, next) => {
               req.token = token;
               req.username = isUserAuthenticated.username;
               req.role_id = isUserAuthenticated.role_id;
+              req.area = isUserAuthenticated.area;  
+              req.department = isUserAuthenticated.department;
+
               console.log(payload.username, "authenticated");
               next();
             } else {
