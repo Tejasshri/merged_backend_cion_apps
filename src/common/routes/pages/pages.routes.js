@@ -19,6 +19,8 @@ pagesRouter.get(
     "/leadgen_app/allleads",
     "/leadgen_app/patient",
     "/leadgen_app/day-wise-followups", 
+    "/admin", 
+    "/admin/capability"
   ],
   (req, res) => {
     res.sendFile(path.join(buildPath, "index.html"), (err) => {

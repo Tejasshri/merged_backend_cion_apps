@@ -54,7 +54,8 @@ patientRouter.get("/patiens/:id", userAuthentication, async (req, res) => {
 
 patientRouter.post("/add-lead", userAuthentication, async (req, res) => {
   // First it will get all the values from the frontend than insets into all leads
-  const {
+  let {
+    id,
     phoneNumber,
     callerName,
     age,
@@ -78,12 +79,21 @@ patientRouter.post("/add-lead", userAuthentication, async (req, res) => {
     dateOfContact,
   } = req.body;
   try {
-    console.log(req.body, "body");
+    const query2 = `SELECT * FROM allleads ORDER BY  id desc LIMIT 1;`;
+
+    const result2 = await connectSqlDBAndExecute(query2);
+
+    if (result2.length > 0) {
+      id = parseInt(result2[0].id) + 1;
+    } else {
+      id = 1;
+    }
+
     const query = `
-      INSERT INTO allleads (phoneNumber, callerName, campaign, age,  coachName, conv,
+      INSERT INTO allleads (id,phoneNumber, callerName, campaign, age,  coachName, conv,
          email, gender, inboundOutbound, interested, coachNotes, leadchannel, level, location, patientName,
          preOp, relationsToPatient, relevant, stage,  typeOfCancer, dateOfContact)
-      VALUES (
+      VALUES (${id},
        ${parseInt(
          phoneNumber
        )}, '${callerName}','${campaign}', ${age},   '${coachName}',  '${conv}',
@@ -91,9 +101,12 @@ patientRouter.post("/add-lead", userAuthentication, async (req, res) => {
        '${preOp}', '${relationsToPatient}', '${relevant}', 'Lead',  '${typeOfCancer}', '${dateOfContact}'
       );
     `;
-    console.log(query);
     const result = await connectSqlDBAndExecute(query);
-    console.log(result, "dfdfd");
+
+    const getTheLatestLead = `
+    SELECT * FROM allleads WHERE id = ${id}`;
+
+    // If the lead is scheduled for today, then it will send a notification to the coachzz
     res.send({ message: "New Lead Added Successfully" });
   } catch (err) {
     res.status(500).send({ message: err.message });
@@ -103,7 +116,7 @@ patientRouter.post("/add-lead", userAuthentication, async (req, res) => {
 patientRouter.put(
   "/update-lead",
   userAuthentication,
-  (...rest) => permissionCheck(...rest, "followup_data", "r"),
+  (...rest) => permissionCheck(...rest, "followup_data", "w"),
   async (req, res) => {
     let { field, id, value, followupId } = req.body;
     async function updateEachCell() {
@@ -127,7 +140,6 @@ patientRouter.put(
 
     try {
       // If the Filed = level and changed value = closed, than it will change all the previous stage status value to Cancelled
-      console.log(field, value);
       if (field === "level" && value === "Closed") {
         const query = `UPDATE followup_table SET status='Cancelled' WHERE leadId = ${id} AND status = 'Scheduled'`;
         const result = await connectSqlDBAndExecute(query);
@@ -188,7 +200,6 @@ patientRouter.put(
         // Execute the update queries
         for (const querys of updateQueries) {
           await connectSqlDBAndExecute(querys);
-          console.log("Success");
         }
 
         return res.status(200).send({ message: "Sucessfully added" });
@@ -208,21 +219,33 @@ patientRouter.put(
 );
 
 // Route to add the follow-up
+
 patientRouter.post("/add-followup", userAuthentication, async (req, res) => {
-  const { id, stage } = req.body;
-  console.log(req.body, "bddf");
+  let { id, stage } = req.body;
   let currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 1);
   // To check whether current day is sunday or not
   if (currentDate.getDay() === 0) {
     currentDate.setDate(currentDate.getDate() + 1);
   }
-
   // All following business days will be assigned to this variable by default the first date will be current date
   let followupDates = [formatDate(currentDate)];
+
   // To get the all  stage Values
   try {
-    const query = `SELECT * FROM followup_table WHERE leadId = ${id}`;
+    let query;
+    if (id !== undefined) {
+      query = `SELECT * FROM followup_table WHERE leadId = ${id}`;
+    } else {
+      query = `SELECT * FROM allleads ORDER BY id desc LIMIT 1;`;
+      const result = await connectSqlDBAndExecute(query);
+      if (result.length > 0) {
+        id = parseInt(result[0].id) + 1;
+      } else {
+        id = 1;
+      }
+      query = `SELECT * FROM followup_table WHERE leadId = ${id}`;
+    }
     const result = await connectSqlDBAndExecute(query);
     const filterStageRows = result.filter((each) => each.leadStage === stage);
     // This Condition checks whether the current stage already exists
@@ -371,7 +394,7 @@ patientRouter.get(
       )} AND status != 'Cancelled' ORDER BY date DESC`;
 
       const result = await connectSqlDBAndExecute(query);
-      console.log(result, "dffdf");
+
       const convertedArray = result.map((each, index) => ({
         ...each,
         fuLead: `${each.leadStage} ${each.followupId}`,
@@ -499,6 +522,35 @@ patientRouter.delete(
         msg: `Error While Deleting ${error.message}`,
       });
     }
+  }
+);
+
+async function deleteFolloups(req, res) {
+  try {
+    const currentDate = new Date();
+    // currentDate.setDate(currentDate.getDate() - 1);
+    const dateConvert = formatDate(currentDate);
+    /*
+     At the end of the day the current day scheduled 
+     followups still in scheduled than it will update that
+     particular followup status to Missed */
+    const response = await connectSqlDBAndExecute(`
+        UPDATE followup_table
+        SET status='Missed'
+        WHERE DATE_FORMAT(followup_table.date, '%Y-%m-%d') LIKE '${dateConvert}'  AND  status LIKE 'Scheduled'`);
+  } catch (e) {
+    res.status(500).send("Failed To Update Followup Table");
+  }
+}
+
+// CRON schedule to assign a task that automatically call the function on every day night 11 : 59
+cron.schedule(
+  "50 11 * * *",
+  () => {
+    deleteFolloups();
+  },
+  {
+    scheduled: true,
   }
 );
 

@@ -108,11 +108,9 @@ const createPool = async () => {
 
 // Function to connect to SQL DB through SSH and execute query
 const connectSqlDBAndExecute = async (query) => {
-  console.log(query);
   try {
     if (!pool) await createPool(); // Ensure pool is initialized
     const rows = await pool.query(query);
-    console.log(rows);
     return rows;
   } catch (error) {
     console.error("SQL Database Connection Error: ", error.message);
@@ -131,7 +129,7 @@ const connectSqlDBAndExecute = async (query) => {
 // Function to handle reconnection attempts for MySQL
 const reconnectMySQL = async () => {
   try {
-    await pool.end(); // End the pool to release all connections
+    await pool?.end(); // End the pool to release all connections
     pool = undefined; // Reset pool to force re-creation
     await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second
     await createPool(); // Re-create the pool and establish SSH tunnel

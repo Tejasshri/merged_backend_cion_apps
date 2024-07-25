@@ -6,6 +6,7 @@ const { sign, verify } = require("jsonwebtoken");
 const userAuthentication = require("../../middlewares/auth.middleware.js");
 const { connectSqlDBAndExecute } = require("../../utils/connectDB.js");
 const { groupByRole } = require("../../utils/groupByRoles.js");
+const { groupByApp } = require("../../utils/groupByApp.js");
 
 const coachRouter = Router();
 // Endpoint to get coach's patient list
@@ -202,8 +203,10 @@ coachRouter.post(
   "/admin/roles-capability",
   userAuthentication,
   async (req, res) => {
+    const { capId } = req.body;
+    if (!capId) return res.status(400).json({ msg: "Not Found Cap Id" });
     try {
-      if ([1, 5].includes(req.role_id))
+      if (![1, 5].includes(req.role_id))
         return res.status(401).json({ json: "Not A Admin! ...Unauthorized" });
       const query = `    
         SELECT 
@@ -215,7 +218,8 @@ coachRouter.post(
             JOIN capability ON capability.id = roles_capability.capability_id)) 
             JOIN feature_capability ON roles_capability.capability_id = feature_capability.capability_id)
             JOIN features ON feature_capability.feature_id = features.id  
-        ORDER BY capability.id ;
+        WHERE capability.id = ${capId}
+        ORDER BY features.app_name ;
     `;
       const rolesCapability = await connectSqlDBAndExecute(query);
       const groupedData = groupByRole(rolesCapability);
@@ -226,10 +230,40 @@ coachRouter.post(
   }
 );
 
+coachRouter.post(
+  "/admin/role-capability",
+  userAuthentication,
+  async (req, res) => {
+    const { capId } = req.body;
+    if (!capId) return res.status(400).json({ msg: "Not Found Cap Id" });
+    try {
+      if (![1, 5].includes(req.role_id))
+        return res.status(401).json({ json: "Not A Admin! ...Unauthorized" });
+      const query = `  
+        SELECT 
+          feature_capability.id as feature_capability_id, capability.name as capability_name ,
+          capability.name AS capability_name, feature_capability.permissions, 
+          features.name AS feature, features.id as feature_id , features.app_name
+        FROM 
+          (capability JOIN feature_capability ON capability.id = feature_capability.capability_id ) JOIN 
+          features ON features.id = feature_capability.feature_id
+        WHERE capability.id = ${capId} 
+        ORDER BY features.app_name ;
+        `;
+      const rolesCapability = await connectSqlDBAndExecute(query);
+      const groupedData = groupByApp(rolesCapability);
+      console.log(groupedData);
+      res.status(200).json({ data: groupedData });
+    } catch (error) {
+      res.status(500).json({ msg: error.message });
+    }
+  }
+);
+
 coachRouter.put("/update-permission", userAuthentication, async (req, res) => {
   try {
     const { cap_feature_id, permission } = req.body;
-    if ([1, 5].includes(req.role_id))
+    if (![1, 5].includes(req.role_id))
       return res.status(401).json({ json: "Not A Admin! ...Unauthorized" });
     const query = `SELECT * FROM feature_capability WHERE feature_capability.id = ${cap_feature_id} ;`;
     let featureCapability = await connectSqlDBAndExecute(query);
@@ -311,6 +345,60 @@ coachRouter.post(
       }
     } catch (err) {
       console.log(err);
+      res.status(500).json({ msg: "Internal Server Err " + err.message });
+    }
+  }
+);
+
+coachRouter.post(
+  "/admin/create-capability",
+  userAuthentication,
+  async (req, res) => {
+    try {
+      if ([1, 5].includes(req.role_id)) {
+        // Step 1
+        let query = `
+        SELECT 
+          * 
+        FROM capability ORDER BY id DESC LIMIT 1; 
+      `;
+        let result = await connectSqlDBAndExecute(query);
+
+        // Step 2
+        query = `INSERT INTO capability (name) value ('${
+          "C" + (result[0].id + 1)
+        }')`;
+        await connectSqlDBAndExecute(query);
+
+        // Step 3
+        query = `
+        SELECT 
+          * 
+        FROM capability ; 
+      `;
+        result = await connectSqlDBAndExecute(query);
+
+        // Step 4
+        query = `
+        INSERT INTO feature_capability (feature_id, capability_id, permissions) 
+        VALUES	
+            (1, ${result.at(-1).id}, ''),
+            (2, ${result.at(-1).id}, ''),
+            (3, ${result.at(-1).id}, ''),
+            (4, ${result.at(-1).id}, ''), 
+            (5, ${result.at(-1).id}, ''),
+            (6, ${result.at(-1).id}, ''),
+            (7, ${result.at(-1).id}, ''), 
+            (8, ${result.at(-1).id}, ''),
+            (9, ${result.at(-1).id}, '');
+          `;
+        await connectSqlDBAndExecute(query);
+
+        return res.status(200).json({ data: result.at(-1) });
+      } else {
+        res.status(401).json({ msg: "Unauthorized" });
+      }
+    } catch (err) {
       res.status(500).json({ msg: "Internal Server Err " + err.message });
     }
   }
