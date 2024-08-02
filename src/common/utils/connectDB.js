@@ -18,7 +18,7 @@ const connectMongoDB = async (routerName = "") => {
     }
 
     const mongoClient = new MongoClient(
-      "mongodb+srv://cionchat:Cionchat%401234@cluster0.xliikxl.mongodb.net/" &&
+      "mongodb+srv://cionchat:Cionchat%401234@cluster0.xliikxl.mongodb.net/" ||
         "mongodb://tejas:tejas1122@127.0.0.1:27017/admin?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.2.9"
     );
 
@@ -75,6 +75,7 @@ const createPool = async () => {
                 ...dbServer,
                 waitForConnections: true,
                 connectionLimit: 1,
+                connectTimeout: 60000,
                 stream, // Use the SSH stream for connection
               });
 
@@ -116,13 +117,18 @@ const connectSqlDBAndExecute = async (query) => {
     console.error("SQL Database Connection Error: ", error.message);
     if (
       error.code === "ER_NET_PACKETS_OUT_OF_ORDER" ||
-      error.code === "ER_USER_LIMIT_REACHED"
+      error.code === "ER_USER_LIMIT_REACHED" ||
+      "ETIMEDOUT" ||
+      "PROTOCOL_CONNECTION_LOST"
     ) {
-      console.error("Retrying connection...");
+      console.clear();
+      console.error("Retrying connection...", error.code);
       await reconnectMySQL(); // Retry connection
     } else {
       console.log(error.message, error.code); // Re-throw other errors for higher level handling
     }
+    await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
+    return await connectSqlDBAndExecute(query);
   }
 };
 
@@ -131,11 +137,11 @@ const reconnectMySQL = async () => {
   try {
     await pool?.end(); // End the pool to release all connections
     pool = undefined; // Reset pool to force re-creation
+    sshClient = undefined;
     await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second
     await createPool(); // Re-create the pool and establish SSH tunnel
   } catch (error) {
     console.error("Error reconnecting MySQL:", error);
-    throw error;
   }
 };
 

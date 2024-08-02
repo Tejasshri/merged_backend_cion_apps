@@ -49,6 +49,10 @@ function initSocketServer(server) {
       delete users[socket.id];
       console.log("User disconnected");
     });
+
+    socket.on("update permissions", () => {
+      
+    })
   });
 
   return io;

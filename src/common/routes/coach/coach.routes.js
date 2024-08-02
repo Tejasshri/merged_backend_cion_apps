@@ -363,7 +363,7 @@ coachRouter.post(
         FROM capability ORDER BY id DESC LIMIT 1; 
       `;
         let result = await connectSqlDBAndExecute(query);
-
+        if (!result) result = [{ id: 0 }];
         // Step 2
         query = `INSERT INTO capability (name) value ('${
           "C" + (result[0].id + 1)
@@ -380,7 +380,8 @@ coachRouter.post(
 
         // Step 4
         query = `
-        INSERT INTO feature_capability (feature_id, capability_id, permissions) 
+        INSERT INTO feature_capability 
+          (feature_id, capability_id, permissions) 
         VALUES	
             (1, ${result.at(-1).id}, ''),
             (2, ${result.at(-1).id}, ''),
@@ -390,7 +391,8 @@ coachRouter.post(
             (6, ${result.at(-1).id}, ''),
             (7, ${result.at(-1).id}, ''), 
             (8, ${result.at(-1).id}, ''),
-            (9, ${result.at(-1).id}, '');
+            (9, ${result.at(-1).id}, ''),
+            (10, ${result.at(-1).id}, '');
           `;
         await connectSqlDBAndExecute(query);
 
@@ -399,6 +401,32 @@ coachRouter.post(
         res.status(401).json({ msg: "Unauthorized" });
       }
     } catch (err) {
+      res.status(500).json({ msg: "Internal Server Err " + err.message });
+    }
+  }
+);
+
+coachRouter.put(
+  "/admin/update-capability-name",
+  userAuthentication,
+  async (req, res) => {
+    const { capability_name, capability_id } = req?.body;
+    try {
+      if ([1, 5].includes(req.role_id)) {
+        // Step 1
+        let query = `
+        UPDATE capability 
+        SET name = "${capability_name}"
+        WHERE id = ${capability_id}; 
+      `;
+        await connectSqlDBAndExecute(query);
+
+        return res.status(200).json({ msg: "Done" });
+      } else {
+        res.status(401).json({ msg: "Unauthorized" });
+      }
+    } catch (err) {
+      console.log(`Error occured in updating cap name : ${err.message}`)
       res.status(500).json({ msg: "Internal Server Err " + err.message });
     }
   }

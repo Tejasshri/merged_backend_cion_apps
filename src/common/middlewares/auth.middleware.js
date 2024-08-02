@@ -34,11 +34,21 @@ const userAuthentication = async (req, res, next) => {
               req.token = token;
               req.username = isUserAuthenticated.username;
               req.role_id = isUserAuthenticated.role_id;
-              req.area = isUserAuthenticated.area;  
+              req.area = isUserAuthenticated.area;
               req.department = isUserAuthenticated.department;
 
               console.log(payload.username, "authenticated");
-              next();
+              try {
+                const time = new Date();
+                const query = `UPDATE users SET last_activity = "${time.toISOString()}" WHERE username = "${
+                  req.username
+                }";`;
+                await connectSqlDBAndExecute(query);
+              } catch (error) {
+                console.log(error.message + " Error occured in updating time");
+              } finally {
+                next();
+              }
             } else {
               res.status(400).json({ msg: "Not a valid token" });
             }

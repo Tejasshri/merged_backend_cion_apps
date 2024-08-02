@@ -436,10 +436,13 @@ patientRouter.get(
       const query = `SELECT
             allleads.id,
             allleads.patientName,
+            allleads.campaign,
+            allleads.callerName,
             allleads.stage,
             allleads.level,
             allleads.phoneNumber,
             followup_table.date,
+            allleads.dateOfContact,
             followup_table.coachNotes,
             followup_table.followupId,
             followup_table.time,
@@ -464,8 +467,14 @@ patientRouter.get(
                 ELSE 4
             END
         `;
+
       const result = await connectSqlDBAndExecute(query);
-      return res.status(200).send(result);
+      console.log(result);
+      const convertedArray = result.map((each) => ({
+        ...each,
+        dateOfContact: formatDate(each.dateOfContact),
+      }));
+      return res.status(200).send(convertedArray);
     } catch (err) {
       return res.status(400).send(err);
     }
@@ -545,7 +554,7 @@ async function deleteFolloups(req, res) {
 
 // CRON schedule to assign a task that automatically call the function on every day night 11 : 59
 cron.schedule(
-  "50 11 * * *",
+  "50 23 * * *",
   () => {
     deleteFolloups();
   },

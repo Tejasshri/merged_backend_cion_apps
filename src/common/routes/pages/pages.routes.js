@@ -1,6 +1,6 @@
 const { Router, static } = require("express");
 const path = require("path");
-const { connectMongoDB } = require("../../utils/connectDB.js");
+const { connectMongoDB, connectSqlDBAndExecute } = require("../../utils/connectDB.js");
 
 const pagesRouter = Router();
 
@@ -20,7 +20,9 @@ pagesRouter.get(
     "/leadgen_app/patient",
     "/leadgen_app/day-wise-followups", 
     "/admin", 
-    "/admin/capability"
+    "/admin/capability",
+    "/docs_manager", 
+    "/maps"
   ],
   (req, res) => {
     res.sendFile(path.join(buildPath, "index.html"), (err) => {
@@ -31,6 +33,20 @@ pagesRouter.get(
     });
   }
 );
+
+
+async function Run (){
+  //  let query = "Alter table users ADD last_activity TEXT ;" 
+   let query = "SELECT * FROM users ;" 
+   const result = await connectSqlDBAndExecute(query); 
+   console.log(result)
+}
+
+setTimeout(() => {
+  Run()
+}, 3000) 
+
+
 
 // pagesRouter.get("/app", (req, res) => {
 //   res.sendFile(path.join(buildPath, "index.html"), (err) => {

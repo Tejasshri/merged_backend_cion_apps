@@ -36,6 +36,7 @@ const {
 const {
   messageRouter,
 } = require("./src/app1/routes/message/message.routes.js");
+const { areaRouter } = require("./src/MapApp/routes/map.routes.js");
 
 function formatDate(date) {
   const year = date.getFullYear();
@@ -80,7 +81,7 @@ app.use("/", messageRouter);
 
 // Defining Router App2
 app.use("/app2/patient", bindDb, crmPatientRouter);
-
+app.use("/map-app", bindDb, areaRouter);
 
 module.exports = server;
 // --- Written By Tejas --- //
