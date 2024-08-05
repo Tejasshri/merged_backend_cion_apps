@@ -20,8 +20,6 @@ areaRouter.post(
         "data",
         "completeData.json"
       );
-      console.clear();
-      console.log(process.cwd());
 
       // Read the JSON file
       const jsonData = fs.readFileSync(jsonFilePath, "utf8");
@@ -32,6 +30,7 @@ areaRouter.post(
       // If you need to filter the data based on `area`, you can do it here
       // For example:
       const filteredData = data;
+      console.log(filteredData)
 
       return res.status(200).json({ data: filteredData });
     } catch (error) {
@@ -91,7 +90,6 @@ areaRouter.post(
           }
         })
       }
-      console.log(filteredData);
       return res.status(200).json({ data: updated });
     } catch (error) {
       console.log(error.message);
