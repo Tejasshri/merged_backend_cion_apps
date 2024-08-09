@@ -118,17 +118,17 @@ const connectSqlDBAndExecute = async (query) => {
     if (
       error.code === "ER_NET_PACKETS_OUT_OF_ORDER" ||
       error.code === "ER_USER_LIMIT_REACHED" ||
-      "ETIMEDOUT" ||
-      "PROTOCOL_CONNECTION_LOST"
+      error.code === "ETIMEDOUT" ||
+      error.code === "PROTOCOL_CONNECTION_LOST"
     ) {
       console.clear();
       console.error("Retrying connection...", error.code);
       await reconnectMySQL(); // Retry connection
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
+      return await connectSqlDBAndExecute(query);
     } else {
       console.log(error.message, error.code); // Re-throw other errors for higher level handling
     }
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
-    return await connectSqlDBAndExecute(query);
   }
 };
 

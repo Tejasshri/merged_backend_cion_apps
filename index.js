@@ -5,8 +5,7 @@ const server  = require("./app.js");
 
 
 const initializeDBAndServer = async () => {
-  try {
-    
+  try {    
     server.listen(PORT, () => {
       console.clear()
       console.log(`Server is running on PORT ${PORT}`);

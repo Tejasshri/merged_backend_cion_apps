@@ -378,6 +378,23 @@ coachRouter.post(
       `;
         result = await connectSqlDBAndExecute(query);
 
+        // Step 4
+        query = `
+        INSERT INTO feature_capability 
+          (feature_id, capability_id, permissions) 
+        VALUES	
+            (1, ${result.at(-1).id}, ''),
+            (2, ${result.at(-1).id}, ''),
+            (3, ${result.at(-1).id}, ''),
+            (4, ${result.at(-1).id}, ''), 
+            (5, ${result.at(-1).id}, ''),
+            (6, ${result.at(-1).id}, ''),
+            (7, ${result.at(-1).id}, ''), 
+            (8, ${result.at(-1).id}, ''),
+            (9, ${result.at(-1).id}, '');
+          `;
+        await connectSqlDBAndExecute(query);
+
         return res.status(200).json({ data: result.at(-1) });
       } else {
         res.status(401).json({ msg: "Unauthorized" });
